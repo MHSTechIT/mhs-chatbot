@@ -17,12 +17,13 @@ def _get_engine():
     global _engine
     if _engine is None:
         try:
+            connect_args = {"timeout": 5} if "sqlite" in DATABASE_URL else {"connect_timeout": 10}
             _engine = create_engine(
                 DATABASE_URL,
                 pool_pre_ping=True,
                 pool_recycle=3600,
                 echo=False,
-                connect_args={"timeout": 5} if "sqlite" in DATABASE_URL else {}
+                connect_args=connect_args,
             )
             logger.info("✅ Database connection initialized")
         except Exception as e:

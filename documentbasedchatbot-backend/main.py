@@ -6,6 +6,7 @@ env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 result = load_dotenv(env_path, override=True)
 
 import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -26,14 +27,23 @@ from src.middleware.rate_limit import RateLimitMiddleware
 from src.models.enrollment import Enrollment
 from src.models.document import Document
 
-# Initialize database tables on startup
-init_db()
-log.info("✅ Database initialized")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB after uvicorn has bound the port (non-blocking startup)
+    try:
+        init_db()
+        log.info("✅ Database initialized")
+    except Exception as e:
+        log.warning(f"⚠️ Database init failed (non-fatal): {e}")
+    yield
+
 
 app = FastAPI(
     title="Document-Based Q&A Voice Chatbot API",
     description="A FastAPI backend leveraging LangChain & Ollama to securely answer questions purely based on a specific company document.",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Rate Limiting Middleware
