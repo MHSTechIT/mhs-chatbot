@@ -42,7 +42,7 @@ app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
 # CORS: allow all localhost origins (Vite dev server uses dynamic ports)
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_origin_regex=r"(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -57,8 +57,8 @@ app.include_router(admin_router, tags=["Admin"])
 def _cors_headers(origin: str | None = None):
     """Headers so browser allows the response when origin is localhost frontend."""
     import re
-    localhost_pattern = re.compile(r"http://(localhost|127\.0\.0\.1)(:\d+)?")
-    o = origin if (origin and localhost_pattern.match(origin)) else "http://localhost:5173"
+    allowed_pattern = re.compile(r"(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app)")
+    o = origin if (origin and allowed_pattern.match(origin)) else "http://localhost:5173"
     return {
         "Access-Control-Allow-Origin": o,
         "Access-Control-Allow-Credentials": "true",
@@ -93,4 +93,4 @@ def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
