@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Environment files (contain sensitive keys)
+.env
+.env.local
+.env.production
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# PID files
+*.pid
+
+# Uploads & local data
+uploads/
+data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

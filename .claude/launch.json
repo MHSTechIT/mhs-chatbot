@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8004"],
+      "port": 8004,
+      "cwd": "documentbasedchatbot-backend"
+    },
+    {
+      "name": "frontend",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd documentbasedchatbot-frontend && npm run dev"],
+      "port": 5173
+    }
+  ]
+}

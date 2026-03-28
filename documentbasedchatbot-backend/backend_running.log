@@ -1,0 +1,281 @@
+INFO:__main__:Loading .env from: E:\new downloads\Documentbasedchatbot\documentbasedchatbot-backend\.env (exists: True, loaded: True)
+INFO:__main__:GOOGLE_API_KEY present: True
+INFO:__main__:GOOGLE_API_KEY value (first 10 chars): AIzaSyCcXG
+INFO:__main__:Working directory: E:\new downloads\Documentbasedchatbot\documentbasedchatbot-backend
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: cpu
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/README.md "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/sentence_bert_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|##########| 103/103 [00:00<00:00, 7705.03it/s]
+[1mBertModel LOAD REPORT[0m from: sentence-transformers/all-MiniLM-L6-v2
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+[3mNotes:
+- UNEXPECTED[3m	:can be ignored when loading from different task/architecture; not ok if you expect identical arch.[0m
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: cpu
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/README.md "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/sentence_bert_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|##########| 103/103 [00:00<00:00, 11360.70it/s]
+[1mBertModel LOAD REPORT[0m from: sentence-transformers/all-MiniLM-L6-v2
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+[3mNotes:
+- UNEXPECTED[3m	:can be ignored when loading from different task/architecture; not ok if you expect identical arch.[0m
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
+INFO:__main__:\u2705 Database initialized
+INFO:     Started server process [39528]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:55051 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): \u0bae\u0bc8\u0b95\u0bb3\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:src.services.ChatService.ChatService:DEBUG: GOOGLE_API_KEY from os.getenv: SET
+INFO:src.services.ChatService.ChatService:DEBUG: GOOGLE_API_KEY in os.environ: True
+INFO:src.services.ChatService.ChatService:DEBUG: All environ keys starting with GOOGLE: ['GOOGLE_API_KEY']
+INFO:src.services.ChatService.ChatService:Initialized Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.ChatService:Initialized Gemini model: gemini-2.5-pro
+INFO:src.services.ChatService.ChatService:Initialized Gemini model: gemini-2.0-flash
+INFO:src.services.ChatService.ChatService:Gemini fallback chain ready: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash']
+INFO:src.services.ChatService.ChatService:TTS Service initialized with voice ID: LRD0hRe2gcPcdv3SjlOn
+INFO:src.services.CacheService:Cache Service initialized with Supabase
+INFO:src.services.ChatService.ChatService:Detected language: tamil
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.ChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.ChatService:Generated Tamil response
+INFO:src.services.CacheService:Looking up cache for hash: 64723246410678fd2459c6a3545d4f516d3998dac16bd933c0bc6e74418b0782
+INFO:httpx:HTTP Request: GET https://mktzrhqaxxclisxckmed.supabase.co/rest/v1/tts_cache?select=audio_url%2Cid&text_hash=eq.64723246410678fd2459c6a3545d4f516d3998dac16bd933c0bc6e74418b0782 "HTTP/2 401 Unauthorized"
+ERROR:src.services.CacheService:Error retrieving from cache: {'message': 'JSON could not be generated', 'code': 401, 'hint': 'Refer to full message for details', 'details': 'b\'{"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}\''}
+INFO:src.services.ChatService.ChatService:Generating TTS audio for tamil response
+INFO:src.services.TtsService:TTS service ready for text-to-speech conversion with voice_id: LRD0hRe2gcPcdv3SjlOn
+INFO:src.services.CacheService:Caching audio for hash: 64723246410678fd2459c6a3545d4f516d3998dac16bd933c0bc6e74418b0782
+INFO:httpx:HTTP Request: POST https://mktzrhqaxxclisxckmed.supabase.co/rest/v1/tts_cache "HTTP/2 401 Unauthorized"
+INFO:src.services.ChatService.ChatService:Generated and cached TTS audio
+INFO:src.controller.chat_controller:Service returned answer length: 198
+INFO:src.controller.chat_controller:Answer sample (first 150): My Health School \u0b8e\u0ba9\u0bcd\u0baa\u0ba4\u0bc1 Integfarms My Health School Pvt. Ltd \u0ba8\u0bbf\u0bb1\u0bc1\u0bb5\u0ba9\u0ba4\u0bcd\u0ba4\u0bbe\u0bb2\u0bcd \u0ba8\u0b9f\u0ba4\u0bcd\u0ba4\u0baa\u0bcd\u0baa\u0b9f\u0bc1\u0b95\u0bbf\u0bb1\u0ba4\u0bc1. \u0b87\u0ba4\u0bc1 Experts, Coaches & Creators \u0b95\u0bcd\u0b95\u0bbe\u0ba9 #1 Program \u0b86\u0b95\u0bc1\u0bae\u0bcd, \u0b87\u0ba4\u0bc1
+INFO:     127.0.0.1:55051 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55051 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57660 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): \u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:src.services.ChatService.ChatService:Detected language: tamil
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.ChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.ChatService:Generated Tamil response
+INFO:src.controller.chat_controller:Service returned answer length: 25
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b95\u0bbf\u0b9f\u0bc8\u0b95\u0bcd\u0b95\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8.
+INFO:     127.0.0.1:50297 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50297 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56235 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): \u0bae\u0baf\u0bbf\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:src.services.ChatService.ChatService:Detected language: tamil
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.ChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.ChatService:Generated Tamil response
+INFO:src.controller.chat_controller:Service returned answer length: 25
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b95\u0bbf\u0b9f\u0bc8\u0b95\u0bcd\u0b95\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8.
+INFO:     127.0.0.1:56235 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56235 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65062 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): \u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:src.services.ChatService.ChatService:Detected language: tamil
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.ChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.ChatService:Generated Tamil response
+INFO:src.controller.chat_controller:Service returned answer length: 25
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b95\u0bbf\u0b9f\u0bc8\u0b95\u0bcd\u0b95\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8.
+INFO:     127.0.0.1:54111 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54111 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): \u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:src.services.ChatService.ChatService:Detected language: tamil
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.ChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.ChatService:Generated Tamil response
+INFO:src.controller.chat_controller:Service returned answer length: 25
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b95\u0bbf\u0b9f\u0bc8\u0b95\u0bcd\u0b95\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8.
+INFO:     127.0.0.1:64979 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64979 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): \u0b87\u0ba8\u0bcd\u0ba4 \u0b95\u0bcb\u0bb8\u0bcd\u0bb2 \u0b8e\u0baa\u0bcd\u0baa\u0b9f\u0bbf \u0b9c\u0bbe\u0baf\u0bbf\u0ba9\u0bcd \u0baa\u0ba3\u0bcd\u0bb1\u0ba4\u0bc1 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:src.services.ChatService.ChatService:Detected language: tamil
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.ChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.ChatService:Generated Tamil response
+INFO:src.controller.chat_controller:Service returned answer length: 25
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b95\u0bbf\u0b9f\u0bc8\u0b95\u0bcd\u0b95\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8.
+INFO:     127.0.0.1:54564 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54564 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56633 - "GET /admin/documents HTTP/1.1" 200 OK
+ERROR:src.controller.admin_controller:Error fetching leads: (psycopg.errors.UndefinedColumn) column enrollments.email does not exist
+LINE 1: ...llments_id, enrollments.name AS enrollments_name, enrollment...
+                                                             ^
+[SQL: SELECT enrollments.id AS enrollments_id, enrollments.name AS enrollments_name, enrollments.email AS enrollments_email, enrollments.phone AS enrollments_phone, enrollments.sugar_level AS enrollments_sugar_level, enrollments.created_at AS enrollments_created_at 
+FROM enrollments ORDER BY enrollments.created_at DESC 
+ LIMIT %(param_1)s::INTEGER]
+[parameters: {'param_1': 100}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+INFO:     127.0.0.1:51075 - "GET /admin/leads HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:56633 - "GET /admin/documents HTTP/1.1" 200 OK
+ERROR:src.controller.admin_controller:Error fetching leads: (psycopg.errors.UndefinedColumn) column enrollments.email does not exist
+LINE 1: ...llments_id, enrollments.name AS enrollments_name, enrollment...
+                                                             ^
+[SQL: SELECT enrollments.id AS enrollments_id, enrollments.name AS enrollments_name, enrollments.email AS enrollments_email, enrollments.phone AS enrollments_phone, enrollments.sugar_level AS enrollments_sugar_level, enrollments.created_at AS enrollments_created_at 
+FROM enrollments ORDER BY enrollments.created_at DESC 
+ LIMIT %(param_1)s::INTEGER]
+[parameters: {'param_1': 100}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+INFO:     127.0.0.1:51075 - "GET /admin/leads HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:52447 - "OPTIONS /admin/documents/7ef78973-4aae-40af-a503-e89b0ea73d12 HTTP/1.1" 200 OK
+INFO:src.repository.admin_repo:Document deleted: 7ef78973-4aae-40af-a503-e89b0ea73d12
+INFO:src.controller.admin_controller:Document deleted: 7ef78973-4aae-40af-a503-e89b0ea73d12
+INFO:     127.0.0.1:52447 - "DELETE /admin/documents/7ef78973-4aae-40af-a503-e89b0ea73d12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52447 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:src.controller.admin_controller:File uploaded: MyHealthSchool_ChatbotKnowledgeBase.docx
+INFO:src.repository.admin_repo:Document added: d99d092d-aa53-425f-8574-fc2b7a86fd7f - link
+INFO:src.services.DocumentIngestionService:Ingested 32 chunks from DOCX link
+INFO:src.controller.admin_controller:Document indexed into vector store: link
+INFO:     127.0.0.1:49672 - "POST /admin/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49672 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60818 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): \u0bae\u0bc8\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95
+INFO:src.services.HealthChatService:HealthChatService initializing...
+INFO:src.services.HealthChatService:HealthChatService ready
+INFO:src.services.HealthChatService:\U0001f195 Detected language: tamil - Q: \u0bae\u0bc8\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95
+INFO:src.services.HealthChatService:Initializing LLM: gemini-2.5-flash
+INFO:src.services.HealthChatService:LLM initialized: gemini-2.5-flash
+WARNING:src.repository.admin_repo:Could not read file: uploads\MyHealthSchool_ChatbotKnowledgeBase.docx
+INFO:src.services.HealthChatService:\U0001f524 Using Tamil prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (tamil): "My Health School" \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b95\u0bc7\u0b95\u0bcd\u0b95\u0bc1\u0bb1\u0bc0\u0b99\u0bcd\u0b95\u0bb3\u0bbe? \u0b9a\u0ba8\u0bcd\u0ba4\u0bcb\u0bb7\u0bae\u0bcd!
+
+"My Healt
+INFO:src.services.HealthChatService:\U0001f4e2 Calling ElevenLabs TTS: "My Health School" \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b95\u0bc7\u0b95\u0bcd\u0b95\u0bc1\u0bb1\u0bc0\u0b99\u0bcd\u0b95\u0bb3\u0bbe? ...
+INFO:src.services.HealthChatService:\u2705 TTS audio generated successfully
+INFO:src.controller.chat_controller:Service returned answer length: 599
+INFO:src.controller.chat_controller:Answer sample (first 150): "My Health School" \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b95\u0bc7\u0b95\u0bcd\u0b95\u0bc1\u0bb1\u0bc0\u0b99\u0bcd\u0b95\u0bb3\u0bbe? \u0b9a\u0ba8\u0bcd\u0ba4\u0bcb\u0bb7\u0bae\u0bcd!
+
+"My Health School"\u0b99\u0bcd\u0b95\u0bbf\u0bb1\u0ba4\u0bc1 \u0b89\u0b99\u0bcd\u0b95 \u0b86\u0bb0\u0bcb\u0b95\u0bcd\u0b95\u0bbf\u0baf\u0ba4\u0bcd\u0ba4\u0bc1\u0b95\u0bcd\u0b95\u0bc1 \u0b92\u0bb0\u0bc1 \u0ba8\u0bb2\u0bcd\u0bb2 \u0ba8\u0ba3\u0bcd\u0baa\u0ba9\u0bcd \u0bae\u0bbe\u0ba4\u0bbf\u0bb0\u0bbf. \u0b86\u0bb0\u0bcb\u0b95\u0bcd\u0b95\u0bbf\u0baf\u0bae\u0bbe\u0ba9 \u0bb5\u0bbe\u0bb4\u0bcd\u0b95\u0bcd\u0b95\u0bc8 \u0bb5\u0bbe\u0bb4 \u0ba4\u0bc7
+INFO:     127.0.0.1:60818 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60818 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55818 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58326 - "POST /admin/clear-all HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62839 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55730 - "GET / HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): \u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95
+INFO:src.services.HealthChatService:\U0001f195 Detected language: tamil - Q: \u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95
+WARNING:src.repository.admin_repo:Could not read file: uploads\MyHealthSchool_ChatbotKnowledgeBase.docx
+INFO:src.services.HealthChatService:\U0001f524 Using Tamil prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (tamil): \u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd! \u0ba8\u0bc0\u0b99\u0bcd\u0b95 \u0bae\u0bc8 \u0bb9\u0bc6\u0bb2\u0bcd\u0ba4\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd (My Health School) \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b95\u0bc7\u0b95
+INFO:src.services.HealthChatService:\U0001f4e2 Calling ElevenLabs TTS: \u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd! \u0ba8\u0bc0\u0b99\u0bcd\u0b95 \u0bae\u0bc8 \u0bb9\u0bc6\u0bb2\u0bcd\u0ba4\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd (My Heal...
+INFO:src.services.HealthChatService:\u2705 TTS audio generated successfully
+INFO:src.controller.chat_controller:Service returned answer length: 447
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd! \u0ba8\u0bc0\u0b99\u0bcd\u0b95 \u0bae\u0bc8 \u0bb9\u0bc6\u0bb2\u0bcd\u0ba4\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd (My Health School) \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b95\u0bc7\u0b95\u0bcd\u0b95\u0bc1\u0bb1\u0bc0\u0b99\u0bcd\u0b95\u0ba9\u0bcd\u0ba9\u0bc1 \u0ba8\u0bbf\u0ba9\u0bc8\u0b95\u0bcd\u0b95\u0bbf\u0bb1\u0bc7\u0ba9\u0bcd.
+
+\u0ba8\u0bbe\u0b99\u0bcd\u0b95 \u0bae\u0bc8 \u0bb9\u0bc6\u0bb2\u0bcd\u0ba4\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0b87\u0bb0\u0bc1\u0ba8\u0bcd\u0ba4\u0bc1\u0ba4\u0bbe\u0ba9\u0bcd \u0baa\u0bc7\u0b9a\u0bc1\u0bb1\u0bcb\u0bae\u0bcd. \u0b89\u0b99\u0bcd\u0b95 \u0b89\u0b9f\u0bb2\u0bcd\u0ba8\u0bb2\u0ba4\u0bcd\u0ba4\u0bc1\u0b95\u0bcd
+INFO:     127.0.0.1:60028 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60028 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54628 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64465 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60607 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55542 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51363 - "POST /admin/clear-all HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53521 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55101 - "POST /admin/clear-all HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54569 - "GET /admin/documents HTTP/1.1" 200 OK
+ERROR:src.controller.admin_controller:Error fetching leads: (psycopg.errors.UndefinedColumn) column enrollments.email does not exist
+LINE 1: ...llments_id, enrollments.name AS enrollments_name, enrollment...
+                                                             ^
+[SQL: SELECT enrollments.id AS enrollments_id, enrollments.name AS enrollments_name, enrollments.email AS enrollments_email, enrollments.phone AS enrollments_phone, enrollments.sugar_level AS enrollments_sugar_level, enrollments.created_at AS enrollments_created_at 
+FROM enrollments ORDER BY enrollments.created_at DESC 
+ LIMIT %(param_1)s::INTEGER]
+[parameters: {'param_1': 100}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+INFO:     127.0.0.1:54571 - "GET /admin/leads HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:55619 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49299 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61010 - "GET /admin/documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52886 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): \u0bae\u0bc8\u0b95\u0bb3\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9a\u0bbe\u0bb0\u0bcd
+INFO:src.services.ChatService.ChatService:Detected language: tamil
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.ChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.ChatService:Generated Tamil response
+INFO:src.controller.chat_controller:Service returned answer length: 25
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b95\u0bbf\u0b9f\u0bc8\u0b95\u0bcd\u0b95\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8.
+INFO:     127.0.0.1:52886 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52886 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59922 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): \u0bae\u0bc8\u0b95\u0bb3\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf
+INFO:src.services.HealthChatService:\U0001f195 Detected language: tamil - Q: \u0bae\u0bc8\u0b95\u0bb3\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf
+WARNING:src.repository.admin_repo:Could not read file: uploads\MyHealthSchool_ChatbotKnowledgeBase.docx
+INFO:src.services.HealthChatService:\U0001f524 Using Tamil prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (tamil): \u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd! \u0bae\u0bc8\u0b95\u0bb3\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0ba4\u0bc6\u0bb0\u0bbf\u0b9e\u0bcd\u0b9a\u0bc1\u0b95\u0bcd\u0b95 \u0b86\u0b9a\u0bc8\u0baf\u0bbe \u0b87\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bbe?
+
+\u0bae\u0bc8\u0baf\u0bbe
+INFO:src.services.HealthChatService:\U0001f4e2 Calling ElevenLabs TTS: \u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd! \u0bae\u0bc8\u0b95\u0bb3\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0ba4\u0bc6\u0bb0\u0bbf\u0b9e\u0bcd\u0b9a\u0bc1\u0b95\u0bcd\u0b95 ...
+INFO:src.services.HealthChatService:\u2705 TTS audio generated successfully
+INFO:src.controller.chat_controller:Service returned answer length: 552
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd! \u0bae\u0bc8\u0b95\u0bb3\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0ba4\u0bc6\u0bb0\u0bbf\u0b9e\u0bcd\u0b9a\u0bc1\u0b95\u0bcd\u0b95 \u0b86\u0b9a\u0bc8\u0baf\u0bbe \u0b87\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bbe?
+
+\u0bae\u0bc8\u0baf\u0bbe\u0b95\u0bb3\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd\u0b99\u0bcd\u0b95\u0bbf\u0bb1\u0ba4\u0bc1, \u0b89\u0b99\u0bcd\u0b95 \u0b86\u0bb0\u0bcb\u0b95\u0bcd\u0b95\u0bbf\u0baf\u0ba4\u0bcd\u0ba4\u0bc1\u0b95\u0bcd\u0b95\u0bbe\u0b95\u0bb5\u0bc7 \u0b86\u0bb0\u0bae\u0bcd\u0baa\u0bbf\u0b95\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0b9f\u0bcd\u0b9f \u0b92\u0bb0\u0bc1 \u0b87\u0b9f\u0bae\u0bcd. \u0b87\u0b99\u0bcd\u0b95 \u0ba8\u0bbe\u0b99\u0bcd\u0b95, \u0b89\u0b99\u0bcd\u0b95 \u0b89\u0b9f\u0bb2
+INFO:     127.0.0.1:57081 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57081 - "POST /tts/generate HTTP/1.1" 200 OK

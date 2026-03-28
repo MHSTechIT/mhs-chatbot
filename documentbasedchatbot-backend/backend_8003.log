@@ -1,0 +1,211 @@
+INFO:     Will watch for changes in these directories: ['E:\\new downloads\\Documentbasedchatbot\\documentbasedchatbot-backend']
+INFO:     Uvicorn running on http://0.0.0.0:8003 (Press CTRL+C to quit)
+INFO:     Started reloader process [11000] using StatReload
+INFO:main:Loading .env from: E:\new downloads\Documentbasedchatbot\documentbasedchatbot-backend\.env (exists: True, loaded: True)
+INFO:main:GOOGLE_API_KEY present: True
+INFO:main:GOOGLE_API_KEY value (first 10 chars): AIzaSyCcXG
+INFO:main:Working directory: E:\new downloads\Documentbasedchatbot\documentbasedchatbot-backend
+INFO:     Started server process [19964]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:53719 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): \u0b8e\u0ba9\u0bcd \u0b89\u0b9f\u0bb2\u0bcd \u0b86\u0bb0\u0bcb\u0b95\u0bcd\u0b95\u0bbf\u0baf\u0bae\u0bcd \u0baa\u0bb1\u0bcd\u0bb1\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd
+INFO:src.services.HealthChatService:\U0001f527\U0001f527 [INIT] HealthChatService starting - GEMINI_MODEL = gemini-2.5-flash
+INFO:src.services.HealthChatService:\U0001f527 Initializing HealthChatService with model: gemini-2.5-flash
+INFO:src.services.HealthChatService:\u2705 LLM initialized successfully with gemini-2.5-flash
+INFO:src.services.HealthChatService:\u2705 ElevenLabs initialized: LRD0hRe2gcPcdv3SjlOn
+INFO:src.services.HealthChatService:\u2705 Document repository initialized
+INFO:src.services.HealthChatService:\U0001f195 Tamil/Tanglish Q: \u0b8e\u0ba9\u0bcd \u0b89\u0b9f\u0bb2\u0bcd \u0b86\u0bb0\u0bcb\u0b95\u0bcd\u0b95\u0bbf\u0baf\u0bae\u0bcd \u0baa\u0bb1\u0bcd\u0bb1\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd - Using model: gemini-2.5-flash
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 \u0ba4\u0bae\u0bbf\u0bb4\u0bcd \u0baa\u0ba4\u0bbf\u0bb2\u0bcd: \u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0b89\u0b9f\u0bb2\u0bcd \u0b86\u0bb0\u0bcb\u0b95\u0bcd\u0b95\u0bbf\u0baf\u0bae\u0bcd \u0baa\u0bb1\u0bcd\u0bb1\u0bbf \u0ba4\u0bc1\u0bb2\u0bcd\u0bb2\u0bbf\u0baf\u0bae\u0bbe\u0b95 \u0b95\u0bc2\u0bb1, \u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0ba4\u0ba9\u0bbf\u0baa\u0bcd\u0baa\u0b9f\u0bcd
+INFO:src.services.HealthChatService:\U0001f4e2 Calling ElevenLabs TTS: \u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0b89\u0b9f\u0bb2\u0bcd \u0b86\u0bb0\u0bcb\u0b95\u0bcd\u0b95\u0bbf\u0baf\u0bae\u0bcd \u0baa\u0bb1\u0bcd\u0bb1\u0bbf \u0ba4\u0bc1\u0bb2\u0bcd\u0bb2\u0bbf\u0baf\u0bae\u0bbe\u0b95 ...
+INFO:src.services.HealthChatService:\u2705 TTS audio generated successfully
+INFO:src.controller.chat_controller:Service returned answer length: 549
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0b89\u0b9f\u0bb2\u0bcd \u0b86\u0bb0\u0bcb\u0b95\u0bcd\u0b95\u0bbf\u0baf\u0bae\u0bcd \u0baa\u0bb1\u0bcd\u0bb1\u0bbf \u0ba4\u0bc1\u0bb2\u0bcd\u0bb2\u0bbf\u0baf\u0bae\u0bbe\u0b95 \u0b95\u0bc2\u0bb1, \u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0ba4\u0ba9\u0bbf\u0baa\u0bcd\u0baa\u0b9f\u0bcd\u0b9f \u0bae\u0bb0\u0bc1\u0ba4\u0bcd\u0ba4\u0bc1\u0bb5 \u0bb5\u0bbf\u0bb5\u0bb0\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0ba4\u0bc7\u0bb5\u0bc8\u0baa\u0bcd\u0baa\u0b9f\u0bc1\u0bae\u0bcd. \u0b87\u0bb0\u0bc1\u0baa\u0bcd\u0baa\u0bbf\u0ba9\u0bc1\u0bae\u0bcd, My Health School-\u0bb2\u0bcd, Type 2 \u0ba8\u0bc0\u0bb0\u0bbf\u0bb4\u0bbf\u0bb5\u0bc1 \u0ba8\u0bcb\u0baf\u0bc8 \u0b89
+INFO:     127.0.0.1:53719 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53719 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53719 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): What is diabetes
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: What is diabetes
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:58384 - "POST /ask HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'src\services\HealthChatService.py'. Reloading...
+ INFO:src.controller.chat_controller:Processing question (mode=health): hi
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: hi
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:63381 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): mhs pathi sollunga
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: mhs pathi sollunga
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:56730 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51144 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): What are the benefits of reversing diabetes?
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: What are the benefits of reversing diabetes?
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:51144 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): How does the diabetes reversal program work?
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: How does the diabetes reversal program work?
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:64258 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): What is the My Health School program?
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: What is the My Health School program?
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:59653 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): hi
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: hi
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:52520 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): hi
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: hi
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:56378 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55559 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): Hello is anyone there
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: Hello is anyone there
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:55559 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): How can I reverse type 2 diabetes?
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: How can I reverse type 2 diabetes?
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:63725 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): How can I reverse type 2 diabetes?
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: How can I reverse type 2 diabetes?
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:63731 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=web): What is diabetes?
+INFO:src.services.ChatService.WebSearchChatService:Initializing WebSearchChatService with model: gemini-2.5-flash
+INFO:src.services.ChatService.WebSearchChatService:Successfully initialized Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.WebSearchChatService:TTS Service initialized with voice ID: LRD0hRe2gcPcdv3SjlOn
+INFO:src.services.ChatService.WebSearchChatService:Web search question: What is diabetes?
+INFO:src.services.ChatService.WebSearchChatService:Detected language: English
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.WebSearchChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.WebSearchChatService:Generated answer length: 246
+INFO:src.services.TtsService:TTS service ready for text-to-speech conversion with voice_id: LRD0hRe2gcPcdv3SjlOn
+INFO:src.services.ChatService.WebSearchChatService:TTS audio generated successfully
+INFO:src.controller.chat_controller:Service returned answer length: 246
+INFO:src.controller.chat_controller:Answer sample (first 150): Diabetes is a chronic health condition where the body either doesn't produce enough insulin or can't effectively use the insulin it produces. This lea
+INFO:     127.0.0.1:63733 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): How can I reverse type 2 diabetes?
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: How can I reverse type 2 diabetes?
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:63740 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63744 - "GET / HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): What is diabetes
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: What is diabetes
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:63746 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): What is diabetes?
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: What is diabetes?
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:63752 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=web): Tell me about type 2 diabetes
+INFO:src.services.ChatService.WebSearchChatService:Web search question: Tell me about type 2 diabetes
+INFO:src.services.ChatService.WebSearchChatService:Detected language: English
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.WebSearchChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.WebSearchChatService:Generated answer length: 266
+INFO:src.services.TtsService:TTS service ready for text-to-speech conversion with voice_id: LRD0hRe2gcPcdv3SjlOn
+INFO:src.services.ChatService.WebSearchChatService:TTS audio generated successfully
+INFO:src.controller.chat_controller:Service returned answer length: 266
+INFO:src.controller.chat_controller:Answer sample (first 150): Type 2 diabetes is a chronic condition where the body either doesn't produce enough insulin or doesn't use insulin effectively, leading to high blood 
+INFO:     127.0.0.1:53230 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=web): ???????? ???? ??????? ?????
+INFO:src.services.ChatService.WebSearchChatService:Web search question: ???????? ???? ??????? ?????
+INFO:src.services.ChatService.WebSearchChatService:Detected language: English
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.WebSearchChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.WebSearchChatService:Generated answer length: 200
+INFO:src.services.TtsService:TTS service ready for text-to-speech conversion with voice_id: LRD0hRe2gcPcdv3SjlOn
+INFO:src.services.ChatService.WebSearchChatService:TTS audio generated successfully
+INFO:src.controller.chat_controller:Service returned answer length: 200
+INFO:src.controller.chat_controller:Answer sample (first 150): Turmeric is known for its powerful anti-inflammatory and antioxidant properties, primarily due to its active compound, curcumin. It may help improve b
+INFO:     127.0.0.1:53234 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60443 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): \u0b8e\u0baa\u0bcd\u0baa\u0b9f\u0bbf \u0b87\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bc0\u0b99\u0bcd\u0b95
+INFO:src.services.HealthChatService:\U0001f195 Tamil/Tanglish Q: \u0b8e\u0baa\u0bcd\u0baa\u0b9f\u0bbf \u0b87\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bc0\u0b99\u0bcd\u0b95 - Using model: gemini-2.5-flash
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 \u0ba4\u0bae\u0bbf\u0bb4\u0bcd \u0baa\u0ba4\u0bbf\u0bb2\u0bcd: \u0ba8\u0bbe\u0ba9\u0bcd My Health School-\u0ba9\u0bcd \u0ba4\u0bae\u0bbf\u0bb4\u0bcd \u0b9a\u0bc1\u0b95\u0bbe\u0ba4\u0bbe\u0bb0 \u0b89\u0ba4\u0bb5\u0bbf\u0baf\u0bbe\u0bb3\u0bb0\u0bcd. \u0b9a\u0bc1\u0b95\u0bbe\u0ba4\u0bbe\u0bb0\u0bae\u0bcd 
+INFO:src.services.HealthChatService:\U0001f4e2 Calling ElevenLabs TTS: \u0ba8\u0bbe\u0ba9\u0bcd My Health School-\u0ba9\u0bcd \u0ba4\u0bae\u0bbf\u0bb4\u0bcd \u0b9a\u0bc1\u0b95\u0bbe\u0ba4\u0bbe\u0bb0 \u0b89...
+INFO:src.services.HealthChatService:\u2705 TTS audio generated successfully
+INFO:src.controller.chat_controller:Service returned answer length: 431
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba8\u0bbe\u0ba9\u0bcd My Health School-\u0ba9\u0bcd \u0ba4\u0bae\u0bbf\u0bb4\u0bcd \u0b9a\u0bc1\u0b95\u0bbe\u0ba4\u0bbe\u0bb0 \u0b89\u0ba4\u0bb5\u0bbf\u0baf\u0bbe\u0bb3\u0bb0\u0bcd. \u0b9a\u0bc1\u0b95\u0bbe\u0ba4\u0bbe\u0bb0\u0bae\u0bcd \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd \u0ba8\u0bc0\u0bb0\u0bbf\u0bb4\u0bbf\u0bb5\u0bc1 \u0ba4\u0bca\u0b9f\u0bb0\u0bcd\u0baa\u0bbe\u0ba9 \u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf\u0b95\u0bb3\u0bc1\u0b95\u0bcd\u0b95\u0bc1 \u0baa\u0ba4\u0bbf\u0bb2\u0bb3\u0bbf\u0b95\u0bcd\u0b95 \u0ba8\u0bbe\u0ba9\u0bcd \u0b87\u0b99\u0bcd\u0b95\u0bc1 \u0b87\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bbf\u0bb1\u0bc7\u0ba9\u0bcd.
+
+\u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0b95
+INFO:     127.0.0.1:60443 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60443 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60443 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): Tell me about Michael's school
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: Tell me about Michael's school
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:55392 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): Tell me about my health school
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: Tell me about my health school
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:52772 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=web): What is the My Health School program?
+INFO:src.services.ChatService.WebSearchChatService:Web search question: What is the My Health School program?
+INFO:src.services.ChatService.WebSearchChatService:Detected language: English
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.WebSearchChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.WebSearchChatService:Generated answer length: 408
+INFO:src.services.TtsService:TTS service ready for text-to-speech conversion with voice_id: LRD0hRe2gcPcdv3SjlOn
+INFO:src.services.ChatService.WebSearchChatService:TTS audio generated successfully
+INFO:src.controller.chat_controller:Service returned answer length: 408
+INFO:src.controller.chat_controller:Answer sample (first 150): The My Health School program is an initiative aimed at promoting health education and well-being within school communities. It focuses on educating st
+INFO:     127.0.0.1:62508 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=web): hello how are you
+INFO:src.services.ChatService.WebSearchChatService:Web search question: hello how are you
+INFO:src.services.ChatService.WebSearchChatService:Detected language: English
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.ChatService.WebSearchChatService:Successfully used Gemini model: gemini-2.5-flash
+INFO:src.services.ChatService.WebSearchChatService:Generated answer length: 126
+INFO:src.services.TtsService:TTS service ready for text-to-speech conversion with voice_id: LRD0hRe2gcPcdv3SjlOn
+INFO:src.services.ChatService.WebSearchChatService:TTS audio generated successfully
+INFO:src.controller.chat_controller:Service returned answer length: 126
+INFO:src.controller.chat_controller:Answer sample (first 150): Hello! As an AI, I don't experience feelings, but I'm functioning perfectly and ready to assist you. How can I help you today?
+INFO:     127.0.0.1:53506 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): What are the benefits of My Health School program?
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: What are the benefits of My Health School program?
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:64716 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57020 - "GET / HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): test english
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: test english
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:57013 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): What is diabetes
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: What is diabetes
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:61980 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): ??????? ??????? ????
+WARNING:src.services.HealthChatService:\u274c Non-Tamil question rejected: ??????? ??????? ????
+INFO:src.controller.chat_controller:Service returned answer length: 81
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0ba4\u0baf\u0bb5\u0bc1\u0b9a\u0bc6\u0baf\u0bcd\u0ba4\u0bc1 \u0ba4\u0bae\u0bbf\u0bb4\u0bbf\u0bb2\u0bcd \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0ba4\u0b99\u0bcd\u0b95\u0bcd\u0bb2\u0bbf\u0bb7\u0bcd\u0bb8\u0bcd (\u0ba4\u0bae\u0bbf\u0bb4\u0bcd + \u0b86\u0b99\u0bcd\u0b95\u0bbf\u0bb2\u0bae\u0bcd \u0b95\u0bb2\u0bb5\u0bc8)\u0bb2\u0bcd \u0b95\u0bc7\u0bb3\u0bcd\u0bb5\u0bbf \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.
+INFO:     127.0.0.1:61992 - "POST /ask HTTP/1.1" 200 OK

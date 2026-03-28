@@ -1,0 +1,303 @@
+INFO:__main__:Loading .env from: E:\new downloads\Documentbasedchatbot\documentbasedchatbot-backend\.env (exists: True, loaded: True)
+INFO:__main__:GOOGLE_API_KEY present: True
+INFO:__main__:GOOGLE_API_KEY value (first 10 chars): AIzaSyCcXG
+INFO:__main__:Working directory: E:\new downloads\Documentbasedchatbot\documentbasedchatbot-backend
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: cpu
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/README.md "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/sentence_bert_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|##########| 103/103 [00:00<00:00, 11354.73it/s]
+[1mBertModel LOAD REPORT[0m from: sentence-transformers/all-MiniLM-L6-v2
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+[3mNotes:
+- UNEXPECTED[3m	:can be ignored when loading from different task/architecture; not ok if you expect identical arch.[0m
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: cpu
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/README.md "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/modules.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/sentence_bert_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|##########| 103/103 [00:00<00:00, 12192.06it/s]
+[1mBertModel LOAD REPORT[0m from: sentence-transformers/all-MiniLM-L6-v2
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+[3mNotes:
+- UNEXPECTED[3m	:can be ignored when loading from different task/architecture; not ok if you expect identical arch.[0m
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/c9745ed1d9f207416be6d2e6f8de32d1f16199bf/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
+INFO:__main__:\u2705 Database initialized
+INFO:     Started server process [14020]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:49998 - "GET / HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): What is the program duration?
+INFO:src.services.HealthChatService:HealthChatService initializing...
+INFO:src.services.HealthChatService:HealthChatService ready
+INFO:src.services.HealthChatService:\U0001f195 Detected language: english - Q: What is the program duration?
+INFO:src.services.HealthChatService:Initializing LLM: gemini-2.5-flash
+INFO:src.services.HealthChatService:LLM initialized: gemini-2.5-flash
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using English prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (english): The program duration is 6 months.
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 33
+INFO:src.controller.chat_controller:Answer sample (first 150): The program duration is 6 months.
+INFO:     127.0.0.1:55425 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): How can I join the program?
+INFO:src.services.HealthChatService:\U0001f195 Detected language: english - Q: How can I join the program?
+INFO:src.services.HealthChatService:\U0001f4dd Enrollment detected (EN): 'join' in 'How can I join the program?'
+INFO:src.services.HealthChatService:\U0001f4dd Enrollment inquiry detected - will show form AND answer from documents
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using English prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (english): I don't have this information.
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 30
+INFO:src.controller.chat_controller:Answer sample (first 150): I don't have this information.
+INFO:     127.0.0.1:50930 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): What is the program duration?
+INFO:src.services.HealthChatService:\U0001f195 Detected language: english - Q: What is the program duration?
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using English prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (english): The flagship program is designed to reverse Type 2 diabetes 
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 86
+INFO:src.controller.chat_controller:Answer sample (first 150): The flagship program is designed to reverse Type 2 diabetes naturally within 6 months.
+INFO:     127.0.0.1:61162 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57276 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57276 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57276 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56691 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): \u0bae\u0bc8\u0baf\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95
+INFO:src.services.HealthChatService:\U0001f195 Detected language: tamil - Q: \u0bae\u0bc8\u0baf\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\U0001f524 Tamil\u2192English: '\u0bae\u0bc8\u0baf\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95' \u2192 'Tell me about Mayil School.'
+INFO:src.services.HealthChatService:\U0001f524 Using translated English question for document search: Tell me about Mayil School.
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using Tamil prompt with translated English question
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (tamil): \u0b8e\u0ba9\u0bcd\u0ba9\u0bbf\u0b9f\u0bae\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8. (I don't have this information)
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 58
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b8e\u0ba9\u0bcd\u0ba9\u0bbf\u0b9f\u0bae\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8. (I don't have this information)
+INFO:     127.0.0.1:56691 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56691 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58866 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58866 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56799 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56799 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64040 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64040 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64040 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64040 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64040 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61757 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): \u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:src.services.HealthChatService:\U0001f195 Detected language: tamil - Q: \u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\U0001f524 Tamil\u2192English: '\u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd' \u2192 'Tell me about Michael School, Doctor'
+INFO:src.services.HealthChatService:\U0001f524 Using translated English question for document search: Tell me about Michael School, Doctor
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using Tamil prompt with translated English question
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (tamil): \u0b8e\u0ba9\u0bcd\u0ba9\u0bbf\u0b9f\u0bae\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 25
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b8e\u0ba9\u0bcd\u0ba9\u0bbf\u0b9f\u0bae\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8
+INFO:     127.0.0.1:61757 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61757 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64778 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64778 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53259 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): \u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:src.services.HealthChatService:\U0001f195 Detected language: tamil - Q: \u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\U0001f524 Tamil\u2192English: '\u0bae\u0bc8\u0b95\u0bcd\u0b95\u0bc7\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd' \u2192 'Tell me about Michael School, Doctor.'
+INFO:src.services.HealthChatService:\U0001f524 Using translated English question for document search: Tell me about Michael School, Doctor.
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using Tamil prompt with translated English question
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (tamil): \u0b8e\u0ba9\u0bcd\u0ba9\u0bbf\u0b9f\u0bae\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 25
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b8e\u0ba9\u0bcd\u0ba9\u0bbf\u0b9f\u0bae\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8
+INFO:     127.0.0.1:63662 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63662 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): Tell me about My Health School
+INFO:src.services.HealthChatService:\U0001f195 Detected language: english - Q: Tell me about My Health School
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using English prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (english): My Health School is India's #1 natural Type 2 Diabetes Rever
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 698
+INFO:src.controller.chat_controller:Answer sample (first 150): My Health School is India's #1 natural Type 2 Diabetes Reversal Program, founded by Dr. Prabhakar Raj. Its mission is to reverse Type 2 diabetes natur
+INFO:     127.0.0.1:54622 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): What is the program fee?
+INFO:src.services.HealthChatService:\U0001f195 Detected language: english - Q: What is the program fee?
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using English prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (english): I don't have this information
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 29
+INFO:src.controller.chat_controller:Answer sample (first 150): I don't have this information
+INFO:     127.0.0.1:60369 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52464 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52464 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64767 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): \u0bae\u0bc6\u0baf\u0bbf\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:src.services.HealthChatService:\U0001f195 Detected language: tamil - Q: \u0bae\u0bc6\u0baf\u0bbf\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\U0001f524 Tamil\u2192English: '\u0bae\u0bc6\u0baf\u0bbf\u0bb2\u0bcd \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd' \u2192 'Please tell me about mail school, Doctor.'
+INFO:src.services.HealthChatService:\U0001f524 Using translated English question for document search: Please tell me about mail school, Doctor.
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using Tamil prompt with translated English question
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (tamil): \u0b8e\u0ba9\u0bcd\u0ba9\u0bbf\u0b9f\u0bae\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8.
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 26
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b8e\u0ba9\u0bcd\u0ba9\u0bbf\u0b9f\u0bae\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8.
+INFO:     127.0.0.1:59845 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59845 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): What is My Health School?
+INFO:src.services.HealthChatService:\U0001f195 Detected language: english - Q: What is My Health School?
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using English prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (english): My Health School is India's leading natural Type 2 Diabetes 
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 194
+INFO:src.controller.chat_controller:Answer sample (first 150): My Health School is India's leading natural Type 2 Diabetes Reversal Program founded by Dr. Prabhakar Raj. It has helped 15,000+ people reverse diabet
+INFO:     127.0.0.1:57919 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): What is My Health School?
+INFO:src.services.HealthChatService:\U0001f195 Detected language: english - Q: What is My Health School?
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using English prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (english): My Health School is India's leading natural Type 2 Diabetes 
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 194
+INFO:src.controller.chat_controller:Answer sample (first 150): My Health School is India's leading natural Type 2 Diabetes Reversal Program founded by Dr. Prabhakar Raj. It has helped 15,000+ people reverse diabet
+INFO:     127.0.0.1:54111 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): How can I join the program?
+INFO:src.services.HealthChatService:\U0001f195 Detected language: english - Q: How can I join the program?
+INFO:src.services.HealthChatService:\U0001f4dd Enrollment detected (EN): 'join' in 'How can I join the program?'
+INFO:src.services.HealthChatService:\U0001f4dd Enrollment inquiry detected - will show form AND answer from documents
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using English prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (english): You can contact My Health School through their website at ww
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 158
+INFO:src.controller.chat_controller:Answer sample (first 150): You can contact My Health School through their website at www.myhealthschool.in. Click on the 'Contact Us' link to submit your inquiry or book a consu
+INFO:     127.0.0.1:57555 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=document): How can I join the program?
+INFO:src.services.HealthChatService:\U0001f195 Detected language: english - Q: How can I join the program?
+INFO:src.services.HealthChatService:\U0001f4dd Enrollment detected (EN): 'join' in 'How can I join the program?'
+INFO:src.services.HealthChatService:\U0001f4dd Enrollment inquiry detected - will show form AND answer from documents
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using English prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (english): I don't have this information.
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 30
+INFO:src.controller.chat_controller:Answer sample (first 150): I don't have this information.
+INFO:     127.0.0.1:54135 - "POST /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): How long is the program?
+INFO:src.services.HealthChatService:\U0001f195 Detected language: english - Q: How long is the program?
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using English prompt
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (english): The flagship program is designed to reverse Type 2 diabetes 
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 86
+INFO:src.controller.chat_controller:Answer sample (first 150): The flagship program is designed to reverse Type 2 diabetes naturally within 6 months.
+INFO:     127.0.0.1:59233 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50334 - "OPTIONS /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50334 - "POST /tts/generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50334 - "OPTIONS /ask HTTP/1.1" 200 OK
+INFO:src.controller.chat_controller:Processing question (mode=health): \u0bb5\u0bc8\u0b95\u0bc8 \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:src.services.HealthChatService:\U0001f195 Detected language: tamil - Q: \u0bb5\u0bc8\u0b95\u0bc8 \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\U0001f524 Tamil\u2192English: '\u0bb5\u0bc8\u0b95\u0bc8 \u0bb8\u0bcd\u0b95\u0bc2\u0bb2\u0bcd \u0baa\u0ba4\u0bcd\u0ba4\u0bbf \u0b9a\u0bca\u0bb2\u0bcd\u0bb2\u0bc1\u0b99\u0bcd\u0b95 \u0b9f\u0bbe\u0b95\u0bcd\u0b9f\u0bb0\u0bcd' \u2192 'Tell me about Vaigai School, Doctor.'
+INFO:src.services.HealthChatService:\U0001f524 Using translated English question for document search: Tell me about Vaigai School, Doctor.
+INFO:src.services.HealthChatService:\U0001f4da Retrieved documents from admin repository - 11406 chars
+INFO:src.services.HealthChatService:\U0001f524 Using Tamil prompt with translated English question
+INFO:google_genai.models:AFC is enabled with max remote calls: 10.
+INFO:httpx:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:src.services.HealthChatService:\u2705 Response (tamil): \u0b8e\u0ba9\u0bcd\u0ba9\u0bbf\u0b9f\u0bae\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8.
+INFO:src.services.HealthChatService:\u2705 TTS ready at endpoint: /tts/generate
+INFO:src.controller.chat_controller:Service returned answer length: 26
+INFO:src.controller.chat_controller:Answer sample (first 150): \u0b8e\u0ba9\u0bcd\u0ba9\u0bbf\u0b9f\u0bae\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0ba4\u0b95\u0bb5\u0bb2\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8.
+INFO:     127.0.0.1:49489 - "POST /ask HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49489 - "POST /tts/generate HTTP/1.1" 200 OK

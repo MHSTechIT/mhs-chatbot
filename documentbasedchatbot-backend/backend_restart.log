@@ -1,0 +1,10 @@
+INFO:main:Loading .env from: E:\new downloads\Documentbasedchatbot\documentbasedchatbot-backend\.env (exists: True, loaded: True)
+INFO:main:GOOGLE_API_KEY present: True
+INFO:main:GOOGLE_API_KEY value (first 10 chars): AIzaSyCcXG
+INFO:main:Working directory: E:\new downloads\Documentbasedchatbot\documentbasedchatbot-backend
+INFO:     Started server process [33812]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('0.0.0.0', 8003): [winerror 10048] only one usage of each socket address (protocol/network address/port) is normally permitted
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
