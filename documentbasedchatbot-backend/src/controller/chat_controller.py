@@ -29,8 +29,8 @@ class AskResponse(BaseModel):
     voice_settings: Optional[dict] = Field(default=None, description="ElevenLabs voice settings with emotion-based parameters")
 
 # Lazily instantiate services as Singletons
-web_search_service_instance: WebSearchChatService = None
-health_service_instance: HealthChatService = None
+web_search_service_instance = None
+health_service_instance = None
 
 def get_web_search_service():
     global web_search_service_instance

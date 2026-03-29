@@ -36,7 +36,7 @@ class AdminRepository:
                         "file_path": doc.file_path,
                         "url": doc.url,
                         "content": doc.content,  # Document content from database
-                        "uploaded_at": doc.uploaded_at.isoformat() if doc.uploaded_at else None
+                        "uploaded_at": doc.created_at.isoformat() if doc.created_at else None
                     }
 
                 logger.info(f"✅ Loaded {len(self.documents)} documents from database")
