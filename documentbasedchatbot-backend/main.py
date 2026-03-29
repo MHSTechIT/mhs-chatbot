@@ -30,12 +30,17 @@ from src.models.document import Document
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB after uvicorn has bound the port (non-blocking startup)
-    try:
-        init_db()
-        log.info("✅ Database initialized")
-    except Exception as e:
-        log.warning(f"⚠️ Database init failed (non-fatal): {e}")
+    # Run init_db in a background thread so it never blocks port binding.
+    # Tables already exist in Supabase; this is just a safety net.
+    import asyncio, concurrent.futures
+    loop = asyncio.get_event_loop()
+    def _safe_init():
+        try:
+            init_db()
+            log.info("✅ Database initialized")
+        except Exception as e:
+            log.warning(f"⚠️ Database init failed (non-fatal): {e}")
+    loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(max_workers=1), _safe_init)
     yield
 
 
