@@ -3,7 +3,7 @@ import { SimpleVoiceInput } from '../components/SimpleVoiceInput';
 import { EnrollmentForm } from '../components/EnrollmentForm';
 import { useConversation } from '../contexts/ConversationContext';
 import { useTheme } from '../contexts/ThemeContext';
-import avatarImage from '../assets/avatar/DOCTOR FARMER CHANNEL THUMBNAIL (1).PNG';
+import avatarImage from '../assets/avatar/DOCTOR FARMER CHANNEL THUMBNAIL (1).png';
 
 interface AvatarPageProps {
   onBackClick: () => void;

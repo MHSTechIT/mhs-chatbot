@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-interface Document {
-  id: string;
-  title: string;
-  url?: string;
-  file_name?: string;
-  type: 'document' | 'link';
-  uploaded_at: string;
-}
-
 interface Lead {
   id: string;
   name: string;
@@ -22,31 +13,10 @@ interface AdminPageProps {
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({ onBackClick }) => {
-  const [documents, setDocuments] = useState<Document[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'upload' | 'leads'>('leads');
 
-  // Upload form
-  const [file, setFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState('');
-
-  // Link form
-  const [linkTitle, setLinkTitle] = useState('');
-  const [linkUrl, setLinkUrl] = useState('');
-
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
-  // Fetch documents
-  const fetchDocuments = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/admin/documents`);
-      const data = await response.json();
-      setDocuments(data.documents || []);
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-    }
-  };
 
   // Fetch leads
   const fetchLeads = async () => {
@@ -60,95 +30,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBackClick }) => {
   };
 
   useEffect(() => {
-    fetchDocuments();
     fetchLeads();
   }, []);
-
-  // Handle file upload
-  const handleFileUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file || !fileName.trim()) {
-      alert('Please select file and enter title');
-      return;
-    }
-
-    setLoading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('title', fileName);
-
-    try {
-      const response = await fetch(`${API_BASE}/admin/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        alert('✅ Document uploaded successfully');
-        setFile(null);
-        setFileName('');
-        fetchDocuments();
-      } else {
-        alert('❌ Upload failed');
-      }
-    } catch (error) {
-      alert('Error uploading: ' + error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle link submission
-  const handleLinkSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!linkTitle.trim() || !linkUrl.trim()) {
-      alert('Please enter both title and URL');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_BASE}/admin/add-link`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: linkTitle,
-          url: linkUrl,
-        }),
-      });
-
-      if (response.ok) {
-        alert('✅ Link added successfully');
-        setLinkTitle('');
-        setLinkUrl('');
-        fetchDocuments();
-      } else {
-        alert('❌ Failed to add link');
-      }
-    } catch (error) {
-      alert('Error adding link: ' + error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Delete document
-  const deleteDocument = async (id: string) => {
-    if (!confirm('Delete this document?')) return;
-
-    try {
-      const response = await fetch(`${API_BASE}/admin/documents/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        alert('✅ Deleted');
-        fetchDocuments();
-      }
-    } catch (error) {
-      alert('Error deleting: ' + error);
-    }
-  };
 
   return (
     <div className="h-screen w-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex overflow-hidden">
