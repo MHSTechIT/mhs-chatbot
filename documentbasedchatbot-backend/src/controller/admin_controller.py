@@ -7,18 +7,24 @@ from pydantic import BaseModel
 from src.repository.admin_repo import AdminRepository
 from src.repository.enrollment_repo import EnrollmentRepository
 from src.database import SessionLocal
-from src.services.DocumentIngestionService import DocumentIngestionService
+# DocumentIngestionService deferred to avoid importing torch/HuggingFace at startup
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 # Database and Services
 admin_repo = AdminRepository()
-try:
-    ingestion_service = DocumentIngestionService()
-except Exception as e:
-    logger.warning(f"Document ingestion service not available: {str(e)}")
-    ingestion_service = None
+ingestion_service = None  # Lazily initialized on first use to avoid startup OOM
+
+def _get_ingestion_service():
+    global ingestion_service
+    if ingestion_service is None:
+        from src.services.DocumentIngestionService import DocumentIngestionService
+        try:
+            ingestion_service = DocumentIngestionService()
+        except Exception as e:
+            logger.warning(f"Document ingestion service not available: {str(e)}")
+    return ingestion_service
 
 
 class LinkRequest(BaseModel):
@@ -107,9 +113,10 @@ async def upload_document(file: UploadFile = File(...), title: str = Form(...)):
         logger.info(f"✅ Document saved to database: {doc_id}")
 
         # Index document into vector store for RAG (optional)
-        if ingestion_service:
+        svc = _get_ingestion_service()
+        if svc:
             try:
-                success = ingestion_service.ingest_document(
+                success = svc.ingest_document(
                     file_path=file_path,
                     file_name=file.filename,
                     title=title,
@@ -146,9 +153,10 @@ async def add_link(request: LinkRequest):
         )
 
         # Index link into vector store for RAG
-        if ingestion_service:
+        svc = _get_ingestion_service()
+        if svc:
             try:
-                success = ingestion_service.ingest_link(
+                success = svc.ingest_link(
                     url=request.url,
                     title=request.title
                 )

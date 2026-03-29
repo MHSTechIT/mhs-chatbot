@@ -7,11 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from src.services.ChatService.IChatService import IChatService
-from src.services.ChatService.WebSearchChatService import WebSearchChatService
-from src.services.HealthChatService import HealthChatService
-from src.database import get_db, init_db
+from src.database import get_db
 from src.repository.enrollment_repo import EnrollmentRepository
+# Heavy service imports are deferred inside factory functions to keep startup fast
 
 logger = logging.getLogger(__name__)
 
@@ -34,19 +32,21 @@ class AskResponse(BaseModel):
 web_search_service_instance: WebSearchChatService = None
 health_service_instance: HealthChatService = None
 
-def get_web_search_service() -> WebSearchChatService:
+def get_web_search_service():
     global web_search_service_instance
     if web_search_service_instance is None:
         try:
+            from src.services.ChatService.WebSearchChatService import WebSearchChatService
             web_search_service_instance = WebSearchChatService()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Web search init failed: {str(e)}")
     return web_search_service_instance
 
-def get_health_service() -> HealthChatService:
+def get_health_service():
     global health_service_instance
     if health_service_instance is None:
         try:
+            from src.services.HealthChatService import HealthChatService
             health_service_instance = HealthChatService()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Health service init failed: {str(e)}")
