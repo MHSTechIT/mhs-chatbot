@@ -1,6 +1,4 @@
 import os
-from langchain_postgres.vectorstores import PGVector
-from langchain_huggingface import HuggingFaceEmbeddings
 from sqlalchemy import create_engine
 
 # Configuration
@@ -23,15 +21,20 @@ def _create_db_engine():
 
     return create_engine(DB_CONNECTION, **engine_kwargs)
 
-def get_vector_store() -> PGVector:
+def get_vector_store():
     """
     Returns a singleton instance of the PGVector store connected to the vector database.
     It initializes the same HuggingFace embeddings model used during ingestion.
     Returns None if connection fails - caller should handle gracefully.
+    Heavy imports (torch, sentence-transformers) are deferred to first call.
     """
     global _vector_store_instance
     if _vector_store_instance is None:
         try:
+            # Deferred imports — torch/sentence-transformers are ~400MB,
+            # loading them at module level crashes Render's 512MB free tier.
+            from langchain_huggingface import HuggingFaceEmbeddings
+            from langchain_postgres.vectorstores import PGVector
             embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
             engine = _create_db_engine()
 
