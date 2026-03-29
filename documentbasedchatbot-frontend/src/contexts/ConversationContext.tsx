@@ -1,4 +1,5 @@
-import React, { createContext, useReducer, useCallback, ReactNode } from 'react';
+import React, { createContext, useReducer, useCallback } from 'react';
+import type { ReactNode } from 'react';
 
 export interface Message {
   id: string;

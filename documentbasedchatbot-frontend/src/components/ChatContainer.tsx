@@ -28,8 +28,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
     const [isSpeaking, setIsSpeaking] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
     const lastPlayedMessageIdRef = useRef<string | null>(null);
-    const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
-
     // Ensure we always have the initial greeting message if chat is empty
     const messages: MessageProps[] = contextMessages.length === 0
         ? [
