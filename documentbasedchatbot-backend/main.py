@@ -1,9 +1,10 @@
 from dotenv import load_dotenv
 import os
+from typing import Optional
 
 # Load .env file explicitly with absolute path
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-result = load_dotenv(env_path, override=True)
+load_dotenv(env_path, override=True)
 
 import logging
 from contextlib import asynccontextmanager
@@ -11,42 +12,27 @@ from fastapi import FastAPI, Request, HTTPException
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-# Debug: Log environment variable loading
-log.info(f"Loading .env from: {env_path} (exists: {os.path.exists(env_path)}, loaded: {result})")
 log.info(f"GOOGLE_API_KEY present: {'GOOGLE_API_KEY' in os.environ}")
-log.info(f"GOOGLE_API_KEY value (first 10 chars): {os.getenv('GOOGLE_API_KEY', 'NOT SET')[:10] if os.getenv('GOOGLE_API_KEY') else 'NOT SET'}")
 log.info(f"Working directory: {os.getcwd()}")
+
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from src.controller.chat_controller import router as chat_router
 from src.controller.admin_controller import router as admin_router
-from src.database import init_db
 from src.middleware.rate_limit import RateLimitMiddleware
-
-# Import all models so SQLAlchemy knows to create their tables
-from src.models.enrollment import Enrollment
-from src.models.document import Document
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Run init_db in a background thread so it never blocks port binding.
-    # Tables already exist in Supabase; this is just a safety net.
-    import asyncio, concurrent.futures
-    loop = asyncio.get_event_loop()
-    def _safe_init():
-        try:
-            init_db()
-            log.info("✅ Database initialized")
-        except Exception as e:
-            log.warning(f"⚠️ Database init failed (non-fatal): {e}")
-    loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(max_workers=1), _safe_init)
+    # Tables already exist in Supabase — skip init_db on startup entirely.
+    # It will be called lazily on first DB-backed request if needed.
+    log.info("✅ App startup complete")
     yield
 
 
 app = FastAPI(
     title="Document-Based Q&A Voice Chatbot API",
-    description="A FastAPI backend leveraging LangChain & Ollama to securely answer questions purely based on a specific company document.",
+    description="A FastAPI backend for document-based Q&A with TTS.",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -54,7 +40,7 @@ app = FastAPI(
 # Rate Limiting Middleware
 app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
 
-# CORS: allow all localhost origins (Vite dev server uses dynamic ports)
+# CORS: allow localhost (dev) and *.vercel.app (production)
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app)",
@@ -69,8 +55,8 @@ app.include_router(chat_router, tags=["Chat"])
 app.include_router(admin_router, tags=["Admin"])
 
 
-def _cors_headers(origin: str | None = None):
-    """Headers so browser allows the response when origin is localhost frontend."""
+def _cors_headers(origin: Optional[str] = None):
+    """Return CORS headers allowing the given origin if it is a known safe origin."""
     import re
     allowed_pattern = re.compile(r"(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app)")
     o = origin if (origin and allowed_pattern.match(origin)) else "http://localhost:5173"
