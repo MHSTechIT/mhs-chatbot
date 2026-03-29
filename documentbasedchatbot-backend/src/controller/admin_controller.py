@@ -12,9 +12,15 @@ from src.database import SessionLocal
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
-# Database and Services
-admin_repo = AdminRepository()
-ingestion_service = None  # Lazily initialized on first use to avoid startup OOM
+# All services lazily initialized — no DB/ML connections at import time
+admin_repo = None
+ingestion_service = None
+
+def _get_admin_repo():
+    global admin_repo
+    if admin_repo is None:
+        admin_repo = AdminRepository()
+    return admin_repo
 
 def _get_ingestion_service():
     global ingestion_service
@@ -98,7 +104,7 @@ async def upload_document(file: UploadFile = File(...), title: str = Form(...)):
         db.commit()
 
         # Also update admin_repo for consistency
-        admin_repo.documents[doc_id] = {
+        _get_admin_repo().documents[doc_id] = {
             "id": doc_id,
             "title": title.strip(),
             "type": "document",
@@ -108,7 +114,7 @@ async def upload_document(file: UploadFile = File(...), title: str = Form(...)):
             "url": None,
             "uploaded_at": datetime.now().isoformat()
         }
-        admin_repo.save_documents()
+        _get_admin_repo().save_documents()
 
         logger.info(f"✅ Document saved to database: {doc_id}")
 
@@ -146,7 +152,7 @@ async def add_link(request: LinkRequest):
         raise HTTPException(status_code=400, detail="Title and URL required")
 
     try:
-        doc_id = admin_repo.add_document(
+        doc_id = _get_admin_repo().add_document(
             title=request.title,
             url=request.url,
             type="link"
@@ -180,8 +186,8 @@ async def get_documents():
     """Get all uploaded documents and links"""
     try:
         # Force reload from file to get latest data
-        admin_repo.load_documents()
-        documents = admin_repo.get_all_documents()
+        _get_admin_repo().load_documents()
+        documents = _get_admin_repo().get_all_documents()
         return {
             "success": True,
             "documents": documents,
@@ -196,7 +202,7 @@ async def get_documents():
 async def delete_document(doc_id: str):
     """Delete a document or link from database AND vector store"""
     try:
-        doc = admin_repo.get_document_by_id(doc_id)
+        doc = _get_admin_repo().get_document_by_id(doc_id)
         if not doc:
             raise HTTPException(status_code=404, detail="Document not found")
 
@@ -219,7 +225,7 @@ async def delete_document(doc_id: str):
                 logger.error(f"Error removing from vector store: {str(e)}")
 
         # Delete from database
-        success = admin_repo.delete_document(doc_id)
+        success = _get_admin_repo().delete_document(doc_id)
         if success:
             logger.info(f"Document deleted from database: {doc_id}")
             return {"success": True, "message": "Document deleted from database and vector store"}
@@ -237,7 +243,7 @@ async def delete_document(doc_id: str):
 async def search_documents(query: str):
     """Search documents by title"""
     try:
-        results = admin_repo.search_documents(query)
+        results = _get_admin_repo().search_documents(query)
         return {"success": True, "results": results}
     except Exception as e:
         logger.error(f"Search error: {str(e)}")
@@ -306,15 +312,15 @@ async def clear_all_data():
         import shutil
 
         # Clear documents from memory cache
-        admin_repo.documents = {}
+        _get_admin_repo().documents = {}
 
         # Clear documents from JSON file
-        admin_repo.save_documents()
+        _get_admin_repo().save_documents()
         logger.info("Cleared all documents from JSON storage")
 
         # Verify by reloading from file
-        admin_repo.load_documents()
-        if not admin_repo.documents:
+        _get_admin_repo().load_documents()
+        if not _get_admin_repo().documents:
             logger.info("Verified: Documents cache is empty")
 
         # Delete uploaded files
