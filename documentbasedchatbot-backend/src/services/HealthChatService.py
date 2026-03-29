@@ -6,7 +6,7 @@ import re
 logger = logging.getLogger(__name__)
 
 # Gemini model (gemini-2.5-flash is the latest available model)
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-2.0-flash"
 
 # Language detection - detect if text is Tamil, Tanglish, or English
 def detect_language(text: str) -> str:
@@ -260,6 +260,18 @@ Question: {question}
 
 Search the documents carefully and answer based ONLY on what's in the documents. Maximum 2 paragraphs, concise:"""
 
+# Module-level singleton so AdminRepository (and its DB load) happens once per process
+_admin_repo_instance = None
+
+def _get_admin_repo():
+    global _admin_repo_instance
+    if _admin_repo_instance is None:
+        from src.repository.admin_repo import AdminRepository
+        _admin_repo_instance = AdminRepository()
+        logger.info("AdminRepository singleton created")
+    return _admin_repo_instance
+
+
 class HealthChatService:
     """Ultra-fast Tamil health Q&A for My Health School."""
 
@@ -267,19 +279,16 @@ class HealthChatService:
         """Initialize with fastest configuration and document repository."""
         logger.info("HealthChatService initializing...")
 
-        # Store credentials for lazy initialization
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
         if not self.google_api_key:
             raise ValueError("GOOGLE_API_KEY not set")
 
         self.llm = None  # Lazy init
 
-        # ⚡ Direct ElevenLabs TTS (no blocking)
         self.elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
         self.elevenlabs_voice_id = os.getenv("ELEVENLABS_VOICE_ID")
         self.elevenlabs_url = f"https://api.elevenlabs.io/v1/text-to-speech/{self.elevenlabs_voice_id}/stream"
 
-        self.admin_repo = None  # Lazy init
         logger.info("HealthChatService ready")
 
     def _init_llm(self):
@@ -294,8 +303,8 @@ class HealthChatService:
                     model=GEMINI_MODEL,
                     temperature=0.7,
                     google_api_key=self.google_api_key,
-                    timeout=15,
-                    max_tokens=2000,
+                    timeout=30,
+                    max_tokens=500,
                     top_p=0.95,
                 )
                 logger.info(f"LLM initialized: {GEMINI_MODEL}")
@@ -394,16 +403,11 @@ class HealthChatService:
                 search_question = translate_tamil_to_english(question, self.llm)
                 logger.info(f"🔤 Using translated English question for document search: {search_question[:50]}")
 
-            # 📄 Retrieve documents from admin repository
+            # 📄 Retrieve documents from admin repository (singleton — no DB call per request)
             documents_content = ""
             try:
-                from src.repository.admin_repo import AdminRepository
-                admin_repo = AdminRepository()
-                # Get all documents and their content
+                admin_repo = _get_admin_repo()
                 logger.debug(f"📚 Documents in repository: {len(admin_repo.documents)}")
-                for doc_id in admin_repo.documents:
-                    logger.debug(f"  - {doc_id}: {admin_repo.documents[doc_id].get('title')}")
-
                 documents_content = admin_repo.get_documents_content()
 
                 if documents_content:
@@ -451,16 +455,12 @@ class HealthChatService:
             emotion, emotion_label, voice_settings = detect_emotion_and_get_settings(answer)
             logger.info(f"🎭 Response emotion detected: {emotion_label}")
 
-            # Generate TTS with emotional voice settings
+            # Signal TTS endpoint — frontend will call /tts/generate separately
             audio_url = None
-            emotion_tag = None
+            emotion_tag = emotion_label
             if self.elevenlabs_api_key:
-                # Call TTS generation with emotion-based voice settings
-                tts_result = self.generate_tts_url(answer, voice_settings)
-                if tts_result['success']:
-                    audio_url = "/tts/generate"
-                    emotion_tag = tts_result.get('emotion')
-                    logger.info(f"✅ TTS ready at endpoint: {audio_url} with {emotion_tag}")
+                audio_url = "/tts/generate"
+                logger.info(f"✅ TTS endpoint ready with {emotion_tag}")
 
             # Determine response type - if enrollment query, show form + answer
             response_type = "enrollment_form" if is_enrollment else "normal"
