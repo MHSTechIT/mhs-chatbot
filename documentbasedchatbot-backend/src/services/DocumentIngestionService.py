@@ -3,10 +3,7 @@ import logging
 from typing import List
 import requests
 from bs4 import BeautifulSoup
-from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_postgres.vectorstores import PGVector
-from langchain_huggingface import HuggingFaceEmbeddings
 from src.repository.vector_db import get_vector_store
 
 logger = logging.getLogger(__name__)
@@ -15,6 +12,8 @@ class DocumentIngestionService:
     """Service to ingest documents into the vector store for RAG"""
 
     def __init__(self):
+        # Deferred imports — torch/sentence-transformers crash Render's 512MB free tier on startup
+        from langchain_huggingface import HuggingFaceEmbeddings
         self.vector_store = get_vector_store()
         self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         # Chunking strategy for better RAG performance
@@ -31,6 +30,7 @@ class DocumentIngestionService:
                 logger.warning(f"File not found: {file_path}")
                 return False
 
+            from langchain_community.document_loaders import TextLoader
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
@@ -72,6 +72,7 @@ class DocumentIngestionService:
                 logger.warning(f"PDF file not found: {file_path}")
                 return False
 
+            from langchain_community.document_loaders import PyPDFLoader
             loader = PyPDFLoader(file_path)
             documents = loader.load()
 
