@@ -6,7 +6,9 @@ from typing import Optional
 env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 load_dotenv(env_path, override=True)
 
+import sys
 import logging
+import traceback
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 logging.basicConfig(level=logging.INFO)
@@ -14,19 +16,50 @@ log = logging.getLogger(__name__)
 
 log.info(f"GOOGLE_API_KEY present: {'GOOGLE_API_KEY' in os.environ}")
 log.info(f"Working directory: {os.getcwd()}")
+log.info(f"Python version: {sys.version}")
+
+# Track startup errors for diagnostics
+_startup_errors = []
+
+# Try to import routers — catch errors so health check always passes
+chat_router = None
+admin_router = None
+RateLimitMiddleware = None
+
+try:
+    from src.controller.chat_controller import router as chat_router
+    log.info("✅ chat_controller loaded")
+except Exception as e:
+    err = f"chat_controller import failed: {type(e).__name__}: {e}\n{traceback.format_exc()}"
+    log.error(err)
+    _startup_errors.append(err)
+
+try:
+    from src.controller.admin_controller import router as admin_router
+    log.info("✅ admin_controller loaded")
+except Exception as e:
+    err = f"admin_controller import failed: {type(e).__name__}: {e}\n{traceback.format_exc()}"
+    log.error(err)
+    _startup_errors.append(err)
+
+try:
+    from src.middleware.rate_limit import RateLimitMiddleware
+    log.info("✅ rate_limit loaded")
+except Exception as e:
+    err = f"rate_limit import failed: {type(e).__name__}: {e}\n{traceback.format_exc()}"
+    log.error(err)
+    _startup_errors.append(err)
 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from src.controller.chat_controller import router as chat_router
-from src.controller.admin_controller import router as admin_router
-from src.middleware.rate_limit import RateLimitMiddleware
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Tables already exist in Supabase — skip init_db on startup entirely.
-    # It will be called lazily on first DB-backed request if needed.
-    log.info("✅ App startup complete")
+    if _startup_errors:
+        log.error(f"App started with {len(_startup_errors)} import error(s)")
+    else:
+        log.info("✅ App startup complete — all modules loaded")
     yield
 
 
@@ -37,8 +70,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Rate Limiting Middleware
-app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
+# Rate Limiting Middleware (only if loaded)
+if RateLimitMiddleware:
+    app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
 
 # CORS: allow localhost (dev) and *.vercel.app (production)
 app.add_middleware(
@@ -50,9 +84,11 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
-# Mount the Chatbot API endpoints
-app.include_router(chat_router, tags=["Chat"])
-app.include_router(admin_router, tags=["Admin"])
+# Mount routers (only if loaded)
+if chat_router:
+    app.include_router(chat_router, tags=["Chat"])
+if admin_router:
+    app.include_router(admin_router, tags=["Admin"])
 
 
 def _cors_headers(origin: Optional[str] = None):
@@ -89,6 +125,12 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.get("/", tags=["Health"])
 def health_check():
+    if _startup_errors:
+        return {
+            "status": "degraded",
+            "errors": _startup_errors,
+            "python": sys.version,
+        }
     return {"status": "FastAPI is running successfully!"}
 
 
