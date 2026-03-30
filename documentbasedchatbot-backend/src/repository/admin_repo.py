@@ -1,4 +1,5 @@
 import os
+import time
 import logging
 import uuid
 from datetime import datetime
@@ -23,10 +24,15 @@ class AdminRepository:
     def __init__(self):
         """Initialize with database storage"""
         self.documents = {}
+        self._last_loaded: float = 0.0
+        self._cache_ttl: float = 60.0  # Reload from DB at most once per 60 seconds
         self.load_documents()
 
     def load_documents(self):
-        """Load documents from DATABASE"""
+        """Load documents from DATABASE (cached — reloads at most every 60s)"""
+        now = time.monotonic()
+        if self.documents and (now - self._last_loaded) < self._cache_ttl:
+            return  # Cache is fresh — skip DB hit
         try:
             from src.database import SessionLocal
             from src.models.document import Document
@@ -50,6 +56,7 @@ class AdminRepository:
                         "uploaded_at": doc.created_at.isoformat() if doc.created_at else None
                     }
 
+                self._last_loaded = time.monotonic()
                 logger.info(f"✅ Loaded {len(self.documents)} documents from database")
 
             finally:

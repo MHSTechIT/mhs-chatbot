@@ -140,6 +140,12 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+@app.get("/ping", tags=["Health"])
+def ping():
+    """Ultra-lightweight keep-alive endpoint — use this for uptime monitors."""
+    return {"ok": True}
+
+
 @app.get("/", tags=["Health"])
 def health_check():
     if _startup_errors:
