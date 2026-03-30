@@ -18,7 +18,7 @@ router = APIRouter()
 # Pydantic models for request validation and response schemas
 class AskRequest(BaseModel):
     question: str = Field(..., description="The user's question.", examples=["What are the office hours?"])
-    mode: str = Field(default="web", description="Search mode: 'web' for Gemini-powered web search or 'document' for document-based RAG")
+    mode: str = Field(default="health", description="Search mode: 'health' for document-based health Q&A, 'web' for Gemini web search")
     language: str = Field(default="en", description="Response language: 'en' for English, 'ta' for Tamil, 'tanglish' for mixed")
 
 class AskResponse(BaseModel):

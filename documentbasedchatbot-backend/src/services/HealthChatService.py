@@ -465,6 +465,24 @@ class HealthChatService:
             # Determine response type - if enrollment query, show form + answer
             response_type = "enrollment_form" if is_enrollment else "normal"
 
+            # If enrollment detected, always give a helpful enrollment message
+            if is_enrollment:
+                not_found_indicators = [
+                    "i don't have this information",
+                    "என்னிடம் இந்த தகவல் இல்லை",
+                    "இந்த தகவல் கிடைக்கவில்லை",
+                    "the requested information is not available",
+                ]
+                answer_lower = answer.lower().strip()
+                is_not_found = any(ind in answer_lower for ind in not_found_indicators)
+
+                if is_not_found or len(answer.strip()) < 30:
+                    if language == 'tamil':
+                        answer = "எங்கள் கோர்ஸ் பற்றி மேலும் தெரிந்துகொள்ள, கீழே உள்ள படிவத்தை நிரப்பவும். எங்கள் ஆலோசகர் விரைவில் உங்களை தொடர்பு கொள்வார்."
+                    else:
+                        answer = "To know more about our course, please fill in the form below. Our support team will contact you soon."
+                    logger.info("📝 Replaced not-found with enrollment guidance message")
+
             return {
                 "answer": answer,
                 "type": response_type,
