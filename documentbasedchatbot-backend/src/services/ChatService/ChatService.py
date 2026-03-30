@@ -17,9 +17,8 @@ logger = logging.getLogger(__name__)
 # gemini-2.0-flash-lite: 30 RPM - more quota, lighter fallback
 # gemini-2.5-flash: newer, medium quota
 GEMINI_MODELS = [
-    "gemini-2.5-flash",
-    "gemini-2.5-pro",
-    "gemini-2.0-flash",  # fallback (may not be available for new users)
+    "gemini-2.5-flash-lite",  # fastest, lowest latency
+    "gemini-2.5-flash",       # fallback
 ]
 
 # Restricted keywords blocklist

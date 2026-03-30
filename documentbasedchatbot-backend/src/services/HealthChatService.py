@@ -5,8 +5,8 @@ import re
 
 logger = logging.getLogger(__name__)
 
-# Gemini model (gemini-2.5-flash is the latest available model)
-GEMINI_MODEL = "gemini-2.0-flash"
+# gemini-2.5-flash-lite: fastest, lowest latency, works for new API keys
+GEMINI_MODEL = "gemini-2.5-flash-lite"
 
 # Language detection - detect if text is Tamil, Tanglish, or English
 def detect_language(text: str) -> str:

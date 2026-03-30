@@ -242,7 +242,7 @@ async def transcribe_audio(request: TranscribeRequest):
         import google.generativeai as genai
         genai.configure(api_key=google_api_key)
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash-lite")
 
         # Build multimodal prompt: audio part + instruction
         audio_part = {

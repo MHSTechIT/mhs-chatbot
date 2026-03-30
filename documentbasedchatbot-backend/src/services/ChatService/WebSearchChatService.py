@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 # Gemini models with fallback - use faster models
 # Updated to use latest available models (gemini-2.0-flash deprecated for new users)
 GEMINI_MODELS = [
+    "gemini-2.5-flash-lite",
     "gemini-2.5-flash",
-    "gemini-2.5-pro",
 ]
 
 # Tamil script character ranges
@@ -79,7 +79,7 @@ class WebSearchChatService:
         self.google_api_key = google_api_key
 
         # Initialize Gemini model (use gemini-2.5-flash - latest available for new users)
-        model_name = "gemini-2.5-flash"
+        model_name = "gemini-2.5-flash-lite"
         logger.info(f"Initializing WebSearchChatService with model: {model_name}")
         self.llm = ChatGoogleGenerativeAI(
             model=model_name,

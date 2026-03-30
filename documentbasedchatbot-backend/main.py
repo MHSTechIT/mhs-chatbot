@@ -60,6 +60,23 @@ async def lifespan(app: FastAPI):
         log.error(f"App started with {len(_startup_errors)} import error(s)")
     else:
         log.info("✅ App startup complete — all modules loaded")
+
+    # Pre-warm services so first request isn't slow
+    try:
+        from src.controller.chat_controller import get_health_service
+        svc = get_health_service()
+        svc._init_llm()
+        log.info("✅ Pre-warmed: HealthChatService + LLM ready")
+    except Exception as e:
+        log.warning(f"Pre-warm skipped: {e}")
+
+    try:
+        from src.services.HealthChatService import _get_admin_repo
+        _get_admin_repo()
+        log.info("✅ Pre-warmed: AdminRepository loaded")
+    except Exception as e:
+        log.warning(f"AdminRepo pre-warm skipped: {e}")
+
     yield
 
 
