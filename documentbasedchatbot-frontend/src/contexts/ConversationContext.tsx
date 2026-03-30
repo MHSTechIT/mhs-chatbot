@@ -94,6 +94,8 @@ function conversationReducer(state: ConversationState, action: ConversationActio
 
 export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(conversationReducer, initialState);
+  const [showResumePrompt, setShowResumePrompt] = React.useState(false);
+  const pendingMessagesRef = React.useRef<Message[]>([]);
 
   const [showEnrollmentForm, setShowEnrollmentForm] = React.useState(false);
   const [enrollmentSubmitted, setEnrollmentSubmitted] = React.useState(() => {
@@ -111,7 +113,10 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (stored) {
       try {
         const messages = JSON.parse(stored);
-        dispatch({ type: 'LOAD_FROM_STORAGE', payload: messages });
+        if (messages.length > 0) {
+          pendingMessagesRef.current = messages;
+          setShowResumePrompt(true);
+        }
       } catch (e) {
         console.error('Failed to load messages from storage:', e);
       }
@@ -120,6 +125,18 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (storedLang) {
       dispatch({ type: 'SET_LANGUAGE', payload: storedLang });
     }
+  }, []);
+
+  const handleResume = React.useCallback(() => {
+    dispatch({ type: 'LOAD_FROM_STORAGE', payload: pendingMessagesRef.current });
+    pendingMessagesRef.current = [];
+    setShowResumePrompt(false);
+  }, []);
+
+  const handleNewChat = React.useCallback(() => {
+    localStorage.removeItem('conversation_messages');
+    pendingMessagesRef.current = [];
+    setShowResumePrompt(false);
   }, []);
 
   React.useEffect(() => {
@@ -218,6 +235,33 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   return (
     <ConversationContext.Provider value={value}>
+      {showResumePrompt && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            background: '#1e293b', borderRadius: 16, padding: '28px 32px',
+            border: '1px solid rgba(139,92,246,0.3)', maxWidth: 360, textAlign: 'center',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          }}>
+            <p style={{ color: '#fff', fontSize: 16, marginBottom: 20 }}>
+              Do you want to continue the previous chat?
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <button onClick={handleNewChat} style={{
+                padding: '10px 24px', borderRadius: 8, border: '1px solid #475569',
+                background: '#334155', color: '#fff', cursor: 'pointer', fontSize: 14,
+              }}>New Chat</button>
+              <button onClick={handleResume} style={{
+                padding: '10px 24px', borderRadius: 8, border: 'none',
+                background: '#7c3aed', color: '#fff', cursor: 'pointer', fontSize: 14,
+              }}>Continue</button>
+            </div>
+          </div>
+        </div>
+      )}
       {children}
     </ConversationContext.Provider>
   );
