@@ -65,9 +65,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
             // Delay slightly to ensure DOM is ready for audio playback
             setTimeout(() => {
                 // Pass voice settings and emotion label from message
+                // Use actual audioUrl (may be a static data: URL or '/tts/generate' flag)
                 playVoice(
                     lastMessage.text,
-                    'audio_enabled',
+                    lastMessage.audioUrl || 'audio_enabled',
                     lastMessage.voice_settings,
                     lastMessage.emotion
                 );
@@ -182,15 +183,26 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
     }, []);
 
     const playVoice = async (text: string, audioUrl?: string, voiceSettings?: any, emotionLabel?: string) => {
-        // Always use ElevenLabs TTS - no fallback to browser speech synthesis
-        if (audioUrl) {
-            // Pass voice settings and emotion label to enable expressive speech
-            await playAudioUrl(text, voiceSettings, emotionLabel);
+        if (!audioUrl) {
+            console.info("TTS skipped — no audio URL");
             return;
         }
-
-        // If no audio URL provided, don't play anything (ElevenLabs is always expected)
-        console.info("ElevenLabs TTS generation skipped - no audio URL provided");
+        // Pre-recorded static audio (data URL) — play directly, no API call needed
+        if (audioUrl.startsWith('data:audio')) {
+            try {
+                setIsSpeaking(true);
+                if (!audioRef.current) audioRef.current = new Audio();
+                audioRef.current.src = audioUrl;
+                audioRef.current.onended = () => setIsSpeaking(false);
+                audioRef.current.onerror = () => setIsSpeaking(false);
+                await audioRef.current.play().catch(() => setIsSpeaking(false));
+            } catch {
+                setIsSpeaking(false);
+            }
+            return;
+        }
+        // Dynamic TTS via ElevenLabs
+        await playAudioUrl(text, voiceSettings, emotionLabel);
     };
 
     /**

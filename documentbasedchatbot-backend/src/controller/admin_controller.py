@@ -322,6 +322,95 @@ async def submit_enrollment(request: EnrollmentRequest):
         db.close()
 
 
+# Pre-defined static messages to pre-record once and reuse forever
+STATIC_AUDIO_TEXTS = {
+    "enrollment_prompt_en": "For more details and personalized guidance, please fill in the form below — our team will contact you soon!",
+    "enrollment_prompt_ta": "நம்ம course பத்தி more details தெரிஞ்சுக்கணும்னா, கீழே உள்ள form-ஐ fill பண்ணுங்க! எங்க team உங்களை விரைவில் contact பண்ணுவாங்க!",
+    "post_enrollment_en": "Thank you! Our team will contact you soon and answer all your questions!",
+    "post_enrollment_ta": "நன்றி! எங்க team விரைவில் உங்களை contact பண்ணி உங்க கேள்விகளுக்கு பதில் சொல்வாங்க!",
+}
+
+
+@router.post("/generate-static-audio")
+async def generate_static_audio():
+    """Generate and store pre-recorded audio for static messages (call ONCE — saves ElevenLabs credits)"""
+    import base64
+    import requests as req_lib
+    from src.models.document import Document
+
+    elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
+    elevenlabs_voice_id = os.getenv("ELEVENLABS_VOICE_ID")
+    if not elevenlabs_api_key or not elevenlabs_voice_id:
+        raise HTTPException(status_code=500, detail="ElevenLabs credentials not configured")
+
+    db = SessionLocal()
+    results = {}
+    try:
+        for key, text in STATIC_AUDIO_TEXTS.items():
+            # Skip if already generated
+            existing = db.query(Document).filter(Document.title == f"static_audio:{key}").first()
+            if existing and existing.content:
+                results[key] = "already_exists"
+                continue
+
+            tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{elevenlabs_voice_id}"
+            payload = {
+                "text": text,
+                "model_id": "eleven_turbo_v2_5",
+                "voice_settings": {"stability": 0.5, "similarity_boost": 0.75, "style": 0.7, "use_speaker_boost": True},
+            }
+            headers = {"xi-api-key": elevenlabs_api_key, "Content-Type": "application/json"}
+            resp = req_lib.post(tts_url, json=payload, headers=headers, timeout=30)
+            if resp.status_code != 200:
+                results[key] = f"error_{resp.status_code}"
+                logger.error(f"ElevenLabs error for {key}: {resp.text[:200]}")
+                continue
+
+            audio_b64 = base64.b64encode(resp.content).decode("utf-8")
+
+            if existing:
+                existing.content = audio_b64
+            else:
+                doc_uuid = _uuid_module.uuid4()
+                new_doc = Document(
+                    id=doc_uuid,
+                    title=f"static_audio:{key}",
+                    type="static_audio",
+                    file_name=f"{key}.mp3",
+                    content=audio_b64,
+                )
+                db.add(new_doc)
+            results[key] = "generated"
+            logger.info(f"✅ Generated static audio: {key} ({len(audio_b64)} chars base64)")
+
+        db.commit()
+        return {"success": True, "results": results}
+    except Exception as e:
+        logger.error(f"Static audio generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+
+@router.get("/static-audio")
+async def get_static_audio():
+    """Return all pre-recorded static audio as base64 — frontend caches these in localStorage"""
+    from src.models.document import Document
+
+    db = SessionLocal()
+    try:
+        docs = db.query(Document).filter(Document.type == "static_audio").all()
+        audio_map = {}
+        for doc in docs:
+            key = doc.title.replace("static_audio:", "")
+            audio_map[key] = doc.content  # base64 mp3
+        return {"success": True, "audio": audio_map}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+
 @router.get("/leads")
 async def get_enrollment_leads():
     """Get all enrollment leads"""

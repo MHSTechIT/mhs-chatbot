@@ -109,6 +109,8 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [state, dispatch] = useReducer(conversationReducer, initialState);
   const [showResumePrompt, setShowResumePrompt] = React.useState(false);
   const pendingMessagesRef = React.useRef<Message[]>([]);
+  // Cache for pre-recorded static audio (base64 mp3) — avoids ElevenLabs API calls for fixed messages
+  const staticAudioRef = React.useRef<Record<string, string>>({});
 
   const [showEnrollmentForm, setShowEnrollmentForm] = React.useState(false);
   const [enrollmentSubmitted, setEnrollmentSubmitted] = React.useState(() => {
@@ -152,6 +154,25 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setShowResumePrompt(false);
   }, []);
 
+  // Load pre-recorded static audio from localStorage cache, then refresh from backend
+  React.useEffect(() => {
+    try {
+      const cached = localStorage.getItem('static_audio_cache');
+      if (cached) staticAudioRef.current = JSON.parse(cached);
+    } catch {}
+
+    const backendUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+    fetch(`${backendUrl}/admin/static-audio`)
+      .then(r => r.json())
+      .then(data => {
+        if (data?.audio && Object.keys(data.audio).length > 0) {
+          staticAudioRef.current = data.audio;
+          localStorage.setItem('static_audio_cache', JSON.stringify(data.audio));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   React.useEffect(() => {
     localStorage.setItem('enrollment_submitted', String(enrollmentSubmitted));
   }, [enrollmentSubmitted]);
@@ -166,6 +187,12 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const MAX_FREE_QUESTIONS = 3;
 
+  // Helper: get a static audio data URL (or undefined if not cached yet)
+  const getStaticAudioUrl = (key: string): string | undefined => {
+    const b64 = staticAudioRef.current[key];
+    return b64 ? `data:audio/mp3;base64,${b64}` : undefined;
+  };
+
   const askQuestion = useCallback(async (question: string, mode: string = 'health') => {
     if (!question.trim()) return;
 
@@ -176,6 +203,27 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       timestamp: Date.now(),
     };
     dispatch({ type: 'ADD_USER_MESSAGE', payload: userMessage });
+
+    // If user already filled the form, reply with a short static message — no AI call needed
+    if (enrollmentSubmitted && state.questionCount >= MAX_FREE_QUESTIONS) {
+      const postText = state.language === 'ta'
+        ? 'நன்றி! எங்க team விரைவில் உங்களை contact பண்ணி உங்க கேள்விகளுக்கு பதில் சொல்வாங்க!'
+        : 'Thank you! Our team will contact you soon and answer all your questions!';
+      const audioKey = state.language === 'ta' ? 'post_enrollment_ta' : 'post_enrollment_en';
+      setTimeout(() => {
+        dispatch({
+          type: 'ADD_BOT_MESSAGE', payload: {
+            id: (Date.now() + 1).toString(),
+            sender: 'bot',
+            text: postText,
+            audioUrl: getStaticAudioUrl(audioKey) || '/tts/generate',
+            timestamp: Date.now(),
+            type: 'normal',
+          }
+        });
+      }, 300);
+      return;
+    }
 
     dispatch({ type: 'SET_LOADING', payload: true });
 
@@ -218,16 +266,17 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
         const newCount = state.questionCount + 1;
 
         if (newCount >= MAX_FREE_QUESTIONS && !enrollmentSubmitted) {
-          // Show enrollment prompt message
           const promptText = state.language === 'ta'
-            ? 'நீங்கள் 3 questions கேட்டாச்சு! 😊 More details-க்கும் personalized guidance-க்கும் கீழே உள்ள form-ஐ fill பண்ணுங்க — எங்க team உங்களை விரைவில் contact பண்ணுவாங்க!'
-            : "You've asked 3 questions! 😊 For more details and personalized guidance, please fill in the form below — our team will contact you soon!";
+            ? 'நம்ம course பத்தி more details தெரிஞ்சுக்கணும்னா, கீழே உள்ள form-ஐ fill பண்ணுங்க! எங்க team உங்களை விரைவில் contact பண்ணுவாங்க!'
+            : 'For more details and personalized guidance, please fill in the form below — our team will contact you soon!';
+          const audioKey = state.language === 'ta' ? 'enrollment_prompt_ta' : 'enrollment_prompt_en';
 
           setTimeout(() => {
             const enrollMsg: Message = {
               id: (Date.now() + 2).toString(),
               sender: 'bot',
               text: promptText,
+              audioUrl: getStaticAudioUrl(audioKey) || '/tts/generate',
               timestamp: Date.now(),
               type: 'enrollment_form',
             };
