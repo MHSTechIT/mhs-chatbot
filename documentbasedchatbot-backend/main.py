@@ -71,8 +71,8 @@ async def lifespan(app: FastAPI):
         log.warning(f"Pre-warm skipped: {e}")
 
     try:
-        from src.services.HealthChatService import _get_admin_repo
-        _get_admin_repo()
+        from src.repository.admin_repo import get_admin_repository
+        get_admin_repository()
         log.info("✅ Pre-warmed: AdminRepository loaded")
     except Exception as e:
         log.warning(f"AdminRepo pre-warm skipped: {e}")

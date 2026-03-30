@@ -1,12 +1,14 @@
 from sqlalchemy import Column, String, DateTime, func, Text
+from sqlalchemy.dialects.postgresql import UUID
 from src.database import Base
 from datetime import datetime
+import uuid as _uuid
 
 class Document(Base):
     """Model for storing uploaded documents from admin dashboard."""
     __tablename__ = "documents"
 
-    id = Column(String(36), primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=_uuid.uuid4)
     title = Column(String(255), nullable=False, index=True)
     type = Column(String(50), nullable=False)  # 'document' or 'link'
     file_name = Column(String(255), nullable=True)

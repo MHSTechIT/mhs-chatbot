@@ -1,10 +1,11 @@
 import os
+import io
 import logging
-import uuid
+import uuid as _uuid_module
 from datetime import datetime
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 from pydantic import BaseModel
-from src.repository.admin_repo import AdminRepository
+from src.repository.admin_repo import get_admin_repository
 from src.repository.enrollment_repo import EnrollmentRepository
 from src.database import SessionLocal
 # DocumentIngestionService deferred to avoid importing torch/HuggingFace at startup
@@ -13,14 +14,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 # All services lazily initialized — no DB/ML connections at import time
-admin_repo = None
 ingestion_service = None
 
 def _get_admin_repo():
-    global admin_repo
-    if admin_repo is None:
-        admin_repo = AdminRepository()
-    return admin_repo
+    return get_admin_repository()
 
 def _get_ingestion_service():
     global ingestion_service
@@ -68,18 +65,41 @@ async def upload_document(file: UploadFile = File(...), title: str = Form(...)):
         file_path = os.path.join(upload_dir, file.filename)
         file_content = await file.read()
 
-        # Read text content from file
+        # Extract text content based on file type
         text_content = ""
-        try:
-            text_content = file_content.decode('utf-8')
-            logger.info(f"✅ Read file content: {len(text_content)} characters")
-        except:
-            # If UTF-8 fails, try other encodings
+        fname_lower = file.filename.lower()
+        if fname_lower.endswith('.pdf'):
             try:
-                text_content = file_content.decode('latin-1')
-                logger.info(f"✅ Read file with latin-1: {len(text_content)} characters")
-            except:
-                logger.warning("Could not decode file content, will save file path only")
+                from pypdf import PdfReader
+                reader = PdfReader(io.BytesIO(file_content))
+                pages_text = []
+                for page in reader.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        pages_text.append(page_text)
+                text_content = "\n".join(pages_text)
+                logger.info(f"✅ Extracted PDF text: {len(text_content)} characters from {len(reader.pages)} pages")
+            except Exception as e:
+                logger.warning(f"PDF extraction failed: {e}")
+        elif fname_lower.endswith('.docx'):
+            try:
+                from docx import Document as DocxDoc
+                doc_obj = DocxDoc(io.BytesIO(file_content))
+                text_content = "\n".join(p.text for p in doc_obj.paragraphs if p.text.strip())
+                logger.info(f"✅ Extracted DOCX text: {len(text_content)} characters")
+            except Exception as e:
+                logger.warning(f"DOCX extraction failed: {e}")
+        else:
+            # Plain text — try UTF-8 then latin-1
+            try:
+                text_content = file_content.decode('utf-8')
+                logger.info(f"✅ Read text content: {len(text_content)} characters")
+            except Exception:
+                try:
+                    text_content = file_content.decode('latin-1')
+                    logger.info(f"✅ Read text (latin-1): {len(text_content)} characters")
+                except Exception:
+                    logger.warning("Could not decode file content")
 
         # Save file to disk
         with open(file_path, "wb") as f:
@@ -91,9 +111,10 @@ async def upload_document(file: UploadFile = File(...), title: str = Form(...)):
         db = SessionLocal()
         from src.models.document import Document
 
-        doc_id = str(uuid.uuid4())
+        doc_uuid = _uuid_module.uuid4()   # UUID object for Supabase uuid column
+        doc_id = str(doc_uuid)            # String for in-memory dict / response
         new_doc = Document(
-            id=doc_id,
+            id=doc_uuid,
             title=title.strip(),
             type="document",
             file_name=file.filename,
@@ -178,6 +199,26 @@ async def add_link(request: LinkRequest):
 
     except Exception as e:
         logger.error(f"Link error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/documents/content-status")
+async def get_documents_content_status():
+    """Diagnostic: show each document and how many characters of content are stored in DB"""
+    try:
+        _get_admin_repo().load_documents()
+        result = []
+        for doc in _get_admin_repo().documents.values():
+            content_len = len(doc.get("content") or "")
+            result.append({
+                "id": doc["id"],
+                "title": doc["title"],
+                "type": doc["type"],
+                "content_chars": content_len,
+                "has_content": content_len > 100,
+            })
+        return {"success": True, "documents": result}
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 

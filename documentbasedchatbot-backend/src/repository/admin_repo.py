@@ -6,6 +6,16 @@ from typing import List, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
+# Module-level singleton — shared across admin_controller and HealthChatService
+_shared_instance = None
+
+def get_admin_repository() -> "AdminRepository":
+    global _shared_instance
+    if _shared_instance is None:
+        _shared_instance = AdminRepository()
+        logger.info("AdminRepository shared singleton created")
+    return _shared_instance
+
 
 class AdminRepository:
     """Manage documents and links for RAG - reads from DATABASE not JSON"""
@@ -28,8 +38,9 @@ class AdminRepository:
                 self.documents = {}
 
                 for doc in db_documents:
-                    self.documents[doc.id] = {
-                        "id": doc.id,
+                    doc_id_str = str(doc.id)  # Always use string keys
+                    self.documents[doc_id_str] = {
+                        "id": doc_id_str,
                         "title": doc.title,
                         "type": doc.type,
                         "file_name": doc.file_name,
@@ -70,11 +81,17 @@ class AdminRepository:
             session = SessionLocal()
             try:
                 # Update database with in-memory documents
+                import uuid as _uuid_mod
                 for doc_id, doc_data in self.documents.items():
-                    existing = session.query(Document).filter(Document.id == doc_id).first()
+                    # Convert string id to UUID object for Supabase
+                    try:
+                        uuid_id = _uuid_mod.UUID(str(doc_id))
+                    except Exception:
+                        uuid_id = _uuid_mod.uuid4()
+                    existing = session.query(Document).filter(Document.id == uuid_id).first()
                     if not existing:
                         new_doc = Document(
-                            id=doc_id,
+                            id=uuid_id,
                             title=doc_data.get("title"),
                             type=doc_data.get("type"),
                             file_name=doc_data.get("file_name"),
@@ -178,7 +195,8 @@ class AdminRepository:
         return results
 
     def get_documents_content(self) -> str:
-        """Get all document content from DATABASE for RAG"""
+        """Get all document content from DATABASE for RAG — always reloads fresh"""
+        self.load_documents()  # Always reload to pick up newly uploaded documents
         content = ""
         logger.info(f"🔍 Getting content from {len(self.documents)} documents")
 
@@ -213,12 +231,18 @@ class AdminRepository:
     def _save_document_content(self, doc_id: str, content: str):
         """Save document content to database"""
         try:
+            import uuid as _uuid_mod
             from src.database import SessionLocal
             from src.models.document import Document
 
+            try:
+                uuid_id = _uuid_mod.UUID(str(doc_id))
+            except Exception:
+                uuid_id = doc_id
+
             session = SessionLocal()
             try:
-                doc = session.query(Document).filter(Document.id == doc_id).first()
+                doc = session.query(Document).filter(Document.id == uuid_id).first()
                 if doc and not doc.content:
                     doc.content = content
                     session.commit()

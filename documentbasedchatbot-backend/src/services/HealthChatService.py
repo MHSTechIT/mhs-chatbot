@@ -260,16 +260,9 @@ Question: {question}
 
 Search the documents carefully and answer based ONLY on what's in the documents. Maximum 2 paragraphs, concise:"""
 
-# Module-level singleton so AdminRepository (and its DB load) happens once per process
-_admin_repo_instance = None
-
 def _get_admin_repo():
-    global _admin_repo_instance
-    if _admin_repo_instance is None:
-        from src.repository.admin_repo import AdminRepository
-        _admin_repo_instance = AdminRepository()
-        logger.info("AdminRepository singleton created")
-    return _admin_repo_instance
+    from src.repository.admin_repo import get_admin_repository
+    return get_admin_repository()
 
 
 class HealthChatService:
