@@ -20,7 +20,8 @@ interface ChatContainerProps {
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) => {
-    const { messages: contextMessages, isLoading, language, askQuestion, setLanguage, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted } = useConversation();
+    const { messages: contextMessages, isLoading, language, askQuestion, setLanguage, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted, questionCount } = useConversation();
+    const inputBlocked = questionCount >= 3 && !enrollmentSubmitted;
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -315,7 +316,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                 <div className="flex items-end gap-3">
                     <SimpleVoiceInput
                         onTranscription={handleSendMessage}
-                        disabled={isLoading}
+                        disabled={isLoading || inputBlocked}
                         language={language}
                         onLanguageChange={(lang) => {
                             setLanguage(lang);
@@ -328,7 +329,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                     <div className="flex-1">
                         <TextInput
                             onSend={handleSendMessage}
-                            disabled={isLoading}
+                            disabled={isLoading || inputBlocked}
                             isDark={isDark}
                         />
                     </div>

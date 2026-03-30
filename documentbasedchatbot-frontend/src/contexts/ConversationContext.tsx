@@ -31,6 +31,8 @@ export interface ConversationContextType {
   /** True after user submits or cancels - prevents form from showing again */
   enrollmentSubmitted: boolean;
   setEnrollmentSubmitted: (submitted: boolean) => void;
+  /** Number of questions answered so far (resets on new chat) */
+  questionCount: number;
 }
 
 const ConversationContext = createContext<ConversationContextType | undefined>(undefined);
@@ -41,18 +43,21 @@ type ConversationAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'ta' }
   | { type: 'CLEAR_MESSAGES' }
-  | { type: 'LOAD_FROM_STORAGE'; payload: Message[] };
+  | { type: 'LOAD_FROM_STORAGE'; payload: Message[] }
+  | { type: 'INCREMENT_QUESTION_COUNT' };
 
 interface ConversationState {
   messages: Message[];
   isLoading: boolean;
   language: 'en' | 'ta';
+  questionCount: number;
 }
 
 const initialState: ConversationState = {
   messages: [],
   isLoading: false,
   language: 'ta',
+  questionCount: 0,
 };
 
 function conversationReducer(state: ConversationState, action: ConversationAction): ConversationState {
@@ -81,11 +86,19 @@ function conversationReducer(state: ConversationState, action: ConversationActio
       return {
         ...state,
         messages: [],
+        questionCount: 0,
       };
     case 'LOAD_FROM_STORAGE':
       return {
         ...state,
         messages: action.payload,
+        // Count existing bot answers when resuming a conversation
+        questionCount: action.payload.filter(m => m.sender === 'bot' && m.type !== 'error').length,
+      };
+    case 'INCREMENT_QUESTION_COUNT':
+      return {
+        ...state,
+        questionCount: state.questionCount + 1,
       };
     default:
       return state;
@@ -151,6 +164,8 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     localStorage.setItem('conversation_language', state.language);
   }, [state.language]);
 
+  const MAX_FREE_QUESTIONS = 3;
+
   const askQuestion = useCallback(async (question: string, mode: string = 'health') => {
     if (!question.trim()) return;
 
@@ -196,6 +211,31 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
         emotion: result.emotion,
       };
       dispatch({ type: 'ADD_BOT_MESSAGE', payload: botMessage });
+
+      // Count this answer and check if we've hit the limit
+      if (result.type !== 'error') {
+        dispatch({ type: 'INCREMENT_QUESTION_COUNT' });
+        const newCount = state.questionCount + 1;
+
+        if (newCount >= MAX_FREE_QUESTIONS && !enrollmentSubmitted) {
+          // Show enrollment prompt message
+          const promptText = state.language === 'ta'
+            ? 'நீங்கள் 3 questions கேட்டாச்சு! 😊 More details-க்கும் personalized guidance-க்கும் கீழே உள்ள form-ஐ fill பண்ணுங்க — எங்க team உங்களை விரைவில் contact பண்ணுவாங்க!'
+            : "You've asked 3 questions! 😊 For more details and personalized guidance, please fill in the form below — our team will contact you soon!";
+
+          setTimeout(() => {
+            const enrollMsg: Message = {
+              id: (Date.now() + 2).toString(),
+              sender: 'bot',
+              text: promptText,
+              timestamp: Date.now(),
+              type: 'enrollment_form',
+            };
+            dispatch({ type: 'ADD_BOT_MESSAGE', payload: enrollMsg });
+            setShowEnrollmentForm(true);
+          }, 800);
+        }
+      }
     } catch (error) {
       console.error('Error asking question:', error);
       const errorMessage: Message = {
@@ -210,7 +250,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [state.language]);
+  }, [state.language, state.questionCount, enrollmentSubmitted]);
 
   const setLanguage = useCallback((lang: 'en' | 'ta') => {
     dispatch({ type: 'SET_LANGUAGE', payload: lang });
@@ -231,6 +271,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setShowEnrollmentForm,
     enrollmentSubmitted,
     setEnrollmentSubmitted,
+    questionCount: state.questionCount,
   };
 
   return (
