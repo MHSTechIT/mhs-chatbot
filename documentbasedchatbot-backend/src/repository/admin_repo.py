@@ -26,6 +26,7 @@ class AdminRepository:
         self.documents = {}
         self._last_loaded: float = 0.0
         self._cache_ttl: float = 60.0  # Reload from DB at most once per 60 seconds
+        self._content_cache: str = ""   # Assembled RAG string cache
         self.load_documents()
 
     def load_documents(self):
@@ -57,6 +58,7 @@ class AdminRepository:
                     }
 
                 self._last_loaded = time.monotonic()
+                self._content_cache = ""  # Invalidate content cache on fresh load
                 logger.info(f"✅ Loaded {len(self.documents)} documents from database")
 
             finally:
@@ -223,10 +225,14 @@ class AdminRepository:
         return results
 
     def get_documents_content(self) -> str:
-        """Get all document content from DATABASE for RAG — always reloads fresh"""
-        self.load_documents()  # Always reload to pick up newly uploaded documents
+        """Get all document content for RAG — cached in memory, refreshed every 60s"""
+        prev_count = len(self.documents)
+        self.load_documents()  # No-op if cache is fresh (TTL)
+        # Rebuild content string only if docs changed or cache is empty
+        if self._content_cache and len(self.documents) == prev_count:
+            return self._content_cache
         content = ""
-        logger.info(f"🔍 Getting content from {len(self.documents)} documents")
+        logger.info(f"🔍 Assembling content from {len(self.documents)} documents")
 
         for doc in self.documents.values():
             content += f"\n\n=== {doc['title']} ===\n"
@@ -253,7 +259,8 @@ class AdminRepository:
                     except Exception as e:
                         logger.warning(f"Could not read file: {doc['file_path']} - {str(e)}")
 
-        logger.info(f"📊 Total content retrieved: {len(content)} characters from database")
+        self._content_cache = content
+        logger.info(f"📊 Total content: {len(content)} chars (cached for next request)")
         return content
 
     def _save_document_content(self, doc_id: str, content: str):

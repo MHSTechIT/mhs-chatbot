@@ -394,11 +394,9 @@ class HealthChatService:
             self._init_llm()
             from langchain_core.messages import HumanMessage
 
-            # 🔤 For Tamil questions, translate to English for better document matching
+            # Gemini handles cross-lingual QA natively — no translation needed
+            # (removed extra LLM call that was doubling latency for Tamil questions)
             search_question = question
-            if language == 'tamil':
-                search_question = translate_tamil_to_english(question, self.llm)
-                logger.info(f"🔤 Using translated English question for document search: {search_question[:50]}")
 
             # 📄 Retrieve documents from admin repository (singleton — no DB call per request)
             documents_content = ""
@@ -424,19 +422,19 @@ class HealthChatService:
             else:
                 documents_context = ""
 
-            # Select prompt based on language - but use translated question for search
+            # Select prompt based on language
             if language == 'tamil':
                 prompt = TAMIL_PROMPT.format(
-                    question=search_question,  # Use translated English question for better matching
+                    question=question,
                     documents_context=documents_context
                 )
-                logger.info(f"🔤 Using Tamil prompt with translated English question")
+                logger.info("🔤 Using Tamil prompt")
             else:
                 prompt = ENGLISH_PROMPT.format(
-                    question=search_question,
+                    question=question,
                     documents_context=documents_context
                 )
-                logger.info(f"🔤 Using English prompt")
+                logger.info("🔤 Using English prompt")
             messages = [HumanMessage(content=prompt)]
 
             # Fast generation
