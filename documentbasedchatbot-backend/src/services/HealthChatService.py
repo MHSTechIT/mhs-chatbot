@@ -366,8 +366,8 @@ class HealthChatService:
             logger.error(f"❌ TTS error: {str(e)}")
             return {'success': False, 'audio_url': None, 'emotion': None}
 
-    async def ask_question(self, question: str) -> dict:
-        """Fast Tamil response - 1-2 seconds with uploaded document context."""
+    async def ask_question(self, question: str, req_language: str = "") -> dict:
+        """Fast Tamil/Tanglish/English response with uploaded document context."""
         if not question or not question.strip():
             return {
                 "answer": "தயவுசெய்து ஒரு கேள்வி கேளுங்கள்.",
@@ -375,9 +375,13 @@ class HealthChatService:
                 "audio_url": None
             }
 
-        # Detect language (tamil, tanglish, or english)
-        language = detect_language(question)
-        logger.info(f"🆕 Detected language: {language} - Q: {question[:50]}")
+        # Determine language: frontend selection takes priority over auto-detection
+        if req_language in ("ta", "tamil"):
+            language = "tamil"
+            logger.info(f"🆕 Language: tamil (from request param) - Q: {question[:50]}")
+        else:
+            language = detect_language(question)
+            logger.info(f"🆕 Language: {language} (auto-detected) - Q: {question[:50]}")
 
         # Check if this is an enrollment/program inquiry
         is_enrollment = detect_enrollment_query(question)

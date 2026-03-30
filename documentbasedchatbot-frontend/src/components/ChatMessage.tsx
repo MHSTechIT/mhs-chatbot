@@ -8,8 +8,15 @@ export interface MessageProps {
     sender: 'user' | 'bot';
     text: string;
     isError?: boolean;
-    audioUrl?: string;  // Optional ElevenLabs TTS audio URL
-    type?: string;  // Response type: 'normal', 'enrollment_form', 'not_found', etc.
+    audioUrl?: string;
+    type?: string;
+    emotion?: string;
+    voice_settings?: {
+        stability: number;
+        similarity_boost: number;
+        style: number;
+        use_speaker_boost: boolean;
+    };
 }
 
 /**
@@ -18,7 +25,7 @@ export interface MessageProps {
 interface ChatMessageProps {
     message: MessageProps;
     /** Optional callback triggered to replay the bot's voice message */
-    onReplay?: (text: string, audioUrl?: string) => void;
+    onReplay?: (text: string, audioUrl?: string, voiceSettings?: MessageProps['voice_settings'], emotion?: string) => void;
     /** Dark mode styling (default: true) */
     isDark?: boolean;
 }
@@ -59,14 +66,17 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onReplay, isD
                 }`}>
                     <div className="text-[15px] leading-relaxed whitespace-pre-wrap">{message.text}</div>
 
+                    {isBot && message.emotion && !message.isError && (
+                        <div className="mt-1.5 text-[11px] opacity-50 select-none">{message.emotion}</div>
+                    )}
+
                     {isBot && onReplay && !message.isError && (
                         <button
                             onClick={() => {
-                                // Cancel any browser speech synthesis
                                 if ('speechSynthesis' in window) {
                                     window.speechSynthesis.cancel();
                                 }
-                                onReplay(message.text, message.audioUrl);
+                                onReplay(message.text, message.audioUrl, message.voice_settings, message.emotion);
                             }}
                             className={`absolute -right-10 top-1/2 -translate-y-1/2 p-2 text-theme-muted hover:text-theme-accent opacity-0 group-hover:opacity-100 transition-opacity rounded-full shadow-sm border ${
                                 isDark ? 'bg-theme-card border-theme-cardBorder' : 'bg-violet-100 border-violet-200'

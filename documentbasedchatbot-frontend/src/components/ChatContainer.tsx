@@ -44,6 +44,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
             audioUrl: msg.audioUrl,
             type: msg.type,
             isError: msg.sender === 'bot' && msg.text.includes('error'),
+            voice_settings: msg.voice_settings,
+            emotion: msg.emotion,
         }));
 
     // Auto-scroll to latest message
@@ -65,8 +67,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                 playVoice(
                     lastMessage.text,
                     'audio_enabled',
-                    (lastMessage as any).voice_settings,
-                    (lastMessage as any).emotion
+                    lastMessage.voice_settings,
+                    lastMessage.emotion
                 );
             }, 500);
         }

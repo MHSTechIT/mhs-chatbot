@@ -77,7 +77,7 @@ async def ask_question(request: AskRequest, db: Session = Depends(get_db)):
             # Use health service for all other modes (health, document, default)
             # HealthChatService has all documents loaded and works for both Chat and Avatar pages
             service = get_health_service()
-            result = await service.ask_question(request.question)
+            result = await service.ask_question(request.question, req_language=request.language)
 
         logger.info(f"Service returned answer length: {len(result.get('answer', ''))}")
         logger.info(f"Answer sample (first 150): {result.get('answer', '')[:150]}")
