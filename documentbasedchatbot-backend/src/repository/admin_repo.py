@@ -160,7 +160,7 @@ class AdminRepository:
         return self.documents.get(doc_id)
 
     def delete_document(self, doc_id: str) -> bool:
-        """Delete document"""
+        """Delete document from memory and DATABASE"""
         if doc_id not in self.documents:
             return False
 
@@ -170,8 +170,29 @@ class AdminRepository:
         if doc.get("file_path") and os.path.exists(doc["file_path"]):
             try:
                 os.remove(doc["file_path"])
-            except Exception as e:
+            except Exception:
                 pass
+
+        # Delete from DATABASE
+        try:
+            import uuid as _uuid_mod
+            from src.database import SessionLocal
+            from src.models.document import Document as DocModel
+            try:
+                uuid_id = _uuid_mod.UUID(str(doc_id))
+            except Exception:
+                uuid_id = doc_id
+            session = SessionLocal()
+            try:
+                db_doc = session.query(DocModel).filter(DocModel.id == uuid_id).first()
+                if db_doc:
+                    session.delete(db_doc)
+                    session.commit()
+                    logger.info(f"✅ Deleted document from database: {doc_id}")
+            finally:
+                session.close()
+        except Exception as e:
+            logger.warning(f"Could not delete from database: {e}")
 
         del self.documents[doc_id]
         self.save_documents()
