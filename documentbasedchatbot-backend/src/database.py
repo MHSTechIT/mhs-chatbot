@@ -17,12 +17,25 @@ def _get_engine():
     global _engine
     if _engine is None:
         try:
+            is_postgres = "postgresql" in DATABASE_URL or "postgres" in DATABASE_URL
+            connect_args = {}
+            if is_postgres:
+                # Force IPv4 + SSL for Supabase pooler on Render (Render has no IPv6)
+                connect_args = {
+                    "sslmode": "require",
+                    "connect_timeout": 10,
+                }
+            elif "sqlite" in DATABASE_URL:
+                connect_args = {"timeout": 5}
+
             _engine = create_engine(
                 DATABASE_URL,
                 pool_pre_ping=True,
-                pool_recycle=3600,
+                pool_recycle=300,   # Recycle connections every 5 min (pooler requirement)
+                pool_size=2,        # Small pool for Render free tier
+                max_overflow=3,
                 echo=False,
-                connect_args={"timeout": 5} if "sqlite" in DATABASE_URL else {},
+                connect_args=connect_args,
             )
             logger.info("✅ Database connection initialized")
         except Exception as e:
