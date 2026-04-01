@@ -14,8 +14,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
   onBackClick,
   avatarImageUrl = avatarImage
 }) => {
-  const { isLoading, language, setLanguage, askQuestion, messages, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted, questionCount, hasPlayed, markPlayed } = useConversation();
-  const inputBlocked = questionCount >= 3 && !enrollmentSubmitted;
+  const { isLoading, language, setLanguage, askQuestion, messages, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted, hasPlayed, markPlayed } = useConversation();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -141,7 +140,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
 
   // Handle transcription from voice input
   const handleTranscription = useCallback(async (text: string) => {
-    if (!text.trim() || inputBlocked) return;
+    if (!text.trim()) return;
 
     // Stop any currently playing audio
     stopAudio();
@@ -154,7 +153,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
     } catch (error) {
       console.error('Error asking question:', error);
     }
-  }, [askQuestion, stopAudio, inputBlocked]);
+  }, [askQuestion, stopAudio]);
 
   const glowFilter = (intensity: number) => {
     const i = intensity;
@@ -275,7 +274,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
         ) : (
           <SimpleVoiceInput
             onTranscription={handleTranscription}
-            disabled={isLoading || inputBlocked}
+            disabled={isLoading}
             language={language}
             onLanguageChange={(lang) => {
               setLanguage(lang);
@@ -297,10 +296,8 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
         const formLang: 'en' | 'ta' = lastUserMsg && !hasTamil(lastUserMsg.text) ? 'en' : language;
         return (
           <EnrollmentForm
-            onClose={() => {
-              setShowEnrollmentForm(false);
-              setEnrollmentSubmitted(true);
-            }}
+            onClose={() => setShowEnrollmentForm(false)}
+            onSubmit={() => setEnrollmentSubmitted(true)}
             language={formLang}
             isDark={isDark}
           />

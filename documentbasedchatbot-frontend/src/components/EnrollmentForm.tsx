@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 
 export interface EnrollmentFormProps {
-  onClose: () => void;
+  onClose: () => void;       // called on Cancel — form dismissed, not submitted
+  onSubmit?: () => void;     // called after successful form submission
   language: 'en' | 'ta';
   isDark?: boolean;
 }
 
-export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, language, isDark = true }) => {
+export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmit, language, isDark = true }) => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -60,9 +61,10 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, languag
       console.log('✅ Enrollment submitted:', result);
       setSubmitted(true);
 
-      // Close form after 2 seconds
+      // After showing success for 2 seconds, notify parent of actual submission
       setTimeout(() => {
-        onClose();
+        onSubmit?.();  // marks enrollment as truly submitted
+        onClose();     // hides the form
       }, 2000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to submit enrollment';

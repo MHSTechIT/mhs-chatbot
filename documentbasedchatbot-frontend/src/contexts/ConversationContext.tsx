@@ -218,7 +218,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
     dispatch({ type: 'ADD_USER_MESSAGE', payload: userMessage });
 
-    // If user already filled/dismissed the form, reply with a short static message — no AI call needed
+    // If user already successfully submitted the form → static "thank you" reply, no AI call
     if (enrollmentSubmitted) {
       const postText = state.language === 'ta'
         ? 'நன்றி! எங்க team விரைவில் உங்களை contact பண்ணி உங்க கேள்விகளுக்கு பதில் சொல்வாங்க!'
@@ -235,6 +235,29 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
             type: 'normal',
           }
         });
+      }, 300);
+      return;
+    }
+
+    // If user has used all free questions but hasn't submitted the form yet →
+    // re-prompt them to fill the form (don't call AI, don't show "thank you")
+    if (state.questionCount >= MAX_FREE_QUESTIONS) {
+      const promptText = state.language === 'ta'
+        ? 'உங்கள் கேள்விக்கு பதில் சொல்ல, முதலில் கீழே உள்ள form-ஐ fill பண்ணுங்க! எங்க team உங்களை விரைவில் contact பண்ணுவாங்க!'
+        : 'To get answers to your questions, please fill in the form below first — our team will contact you soon!';
+      const audioKey = state.language === 'ta' ? 'enrollment_prompt_ta' : 'enrollment_prompt_en';
+      setTimeout(() => {
+        dispatch({
+          type: 'ADD_BOT_MESSAGE', payload: {
+            id: (Date.now() + 1).toString(),
+            sender: 'bot',
+            text: promptText,
+            audioUrl: getStaticAudioUrl(audioKey) || '/tts/generate',
+            timestamp: Date.now(),
+            type: 'enrollment_form',
+          }
+        });
+        setShowEnrollmentForm(true);
       }, 300);
       return;
     }

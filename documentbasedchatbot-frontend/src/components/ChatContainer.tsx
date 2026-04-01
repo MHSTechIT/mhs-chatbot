@@ -20,8 +20,7 @@ interface ChatContainerProps {
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) => {
-    const { messages: contextMessages, isLoading, language, askQuestion, setLanguage, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted, questionCount, hasPlayed, markPlayed } = useConversation();
-    const inputBlocked = questionCount >= 3 && !enrollmentSubmitted;
+    const { messages: contextMessages, isLoading, language, askQuestion, setLanguage, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted, hasPlayed, markPlayed } = useConversation();
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -327,7 +326,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                 <div className="flex items-end gap-3">
                     <SimpleVoiceInput
                         onTranscription={handleSendMessage}
-                        disabled={isLoading || inputBlocked}
+                        disabled={isLoading}
                         language={language}
                         onLanguageChange={(lang) => {
                             setLanguage(lang);
@@ -340,7 +339,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                     <div className="flex-1">
                         <TextInput
                             onSend={handleSendMessage}
-                            disabled={isLoading || inputBlocked}
+                            disabled={isLoading}
                             isDark={isDark}
                         />
                     </div>
@@ -357,10 +356,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                 const formLang: 'en' | 'ta' = lastUserMsg && !hasTamil(lastUserMsg.text) ? 'en' : language;
                 return (
                     <EnrollmentForm
-                        onClose={() => {
-                            setShowEnrollmentForm(false);
-                            setEnrollmentSubmitted(true);
-                        }}
+                        onClose={() => setShowEnrollmentForm(false)}
+                        onSubmit={() => setEnrollmentSubmitted(true)}
                         language={formLang}
                         isDark={isDark}
                     />
