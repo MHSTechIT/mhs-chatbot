@@ -204,8 +204,8 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
     dispatch({ type: 'ADD_USER_MESSAGE', payload: userMessage });
 
-    // If user already filled the form, reply with a short static message — no AI call needed
-    if (enrollmentSubmitted && state.questionCount >= MAX_FREE_QUESTIONS) {
+    // If user already filled the form, always reply with a short static message — no AI call needed
+    if (enrollmentSubmitted) {
       const postText = state.language === 'ta'
         ? 'நன்றி! எங்க team விரைவில் உங்களை contact பண்ணி உங்க கேள்விகளுக்கு பதில் சொல்வாங்க!'
         : 'Thank you! Our team will contact you soon and answer all your questions!';
