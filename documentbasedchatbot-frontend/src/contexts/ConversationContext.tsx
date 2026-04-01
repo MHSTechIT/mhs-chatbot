@@ -66,31 +66,15 @@ const initialState: ConversationState = {
 function conversationReducer(state: ConversationState, action: ConversationAction): ConversationState {
   switch (action.type) {
     case 'ADD_USER_MESSAGE':
-      return {
-        ...state,
-        messages: [...state.messages, action.payload],
-      };
+      return { ...state, messages: [...state.messages, action.payload] };
     case 'ADD_BOT_MESSAGE':
-      return {
-        ...state,
-        messages: [...state.messages, action.payload],
-      };
+      return { ...state, messages: [...state.messages, action.payload] };
     case 'SET_LOADING':
-      return {
-        ...state,
-        isLoading: action.payload,
-      };
+      return { ...state, isLoading: action.payload };
     case 'SET_LANGUAGE':
-      return {
-        ...state,
-        language: action.payload,
-      };
+      return { ...state, language: action.payload };
     case 'CLEAR_MESSAGES':
-      return {
-        ...state,
-        messages: [],
-        questionCount: 0,
-      };
+      return { ...state, messages: [], questionCount: 0 };
     case 'LOAD_FROM_STORAGE':
       return {
         ...state,
@@ -99,13 +83,17 @@ function conversationReducer(state: ConversationState, action: ConversationActio
         questionCount: action.payload.filter(m => m.sender === 'bot' && m.type !== 'error').length,
       };
     case 'INCREMENT_QUESTION_COUNT':
-      return {
-        ...state,
-        questionCount: state.questionCount + 1,
-      };
+      return { ...state, questionCount: state.questionCount + 1 };
     default:
       return state;
   }
+}
+
+// Helper: clear all enrollment-related localStorage keys
+function clearEnrollmentStorage() {
+  try {
+    localStorage.removeItem('enrollment_submitted');
+  } catch {}
 }
 
 export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -121,28 +109,32 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const markPlayed = React.useCallback((id: string) => { playedMessageIdsRef.current.add(id); }, []);
 
   const [showEnrollmentForm, setShowEnrollmentForm] = React.useState(false);
-  const [enrollmentSubmitted, setEnrollmentSubmitted] = React.useState(() => {
-    try {
-      return localStorage.getItem('enrollment_submitted') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  // enrollmentSubmitted is NOT loaded from localStorage on init —
+  // it is only restored when we explicitly resume a previous chat session.
+  const [enrollmentSubmitted, setEnrollmentSubmitted] = React.useState(false);
 
+  // On mount: check for saved messages and decide resume vs fresh start
   React.useEffect(() => {
     const stored = localStorage.getItem('conversation_messages');
     const storedLang = localStorage.getItem('conversation_language') as 'en' | 'ta' | null;
 
     if (stored) {
       try {
-        const messages = JSON.parse(stored);
+        const messages: Message[] = JSON.parse(stored);
         if (messages.length > 0) {
+          // Has a previous session — show resume prompt
           pendingMessagesRef.current = messages;
           setShowResumePrompt(true);
+        } else {
+          // Empty array stored — treat as fresh start, clear enrollment
+          clearEnrollmentStorage();
         }
-      } catch (e) {
-        console.error('Failed to load messages from storage:', e);
+      } catch {
+        clearEnrollmentStorage();
       }
+    } else {
+      // No stored session at all — fresh start, clear any stale enrollment flag
+      clearEnrollmentStorage();
     }
 
     if (storedLang) {
@@ -150,14 +142,21 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, []);
 
+  // When user chooses "Continue" previous chat — restore enrollment state too
   const handleResume = React.useCallback(() => {
+    const wasEnrolled = localStorage.getItem('enrollment_submitted') === 'true';
+    setEnrollmentSubmitted(wasEnrolled);
     dispatch({ type: 'LOAD_FROM_STORAGE', payload: pendingMessagesRef.current });
     pendingMessagesRef.current = [];
     setShowResumePrompt(false);
   }, []);
 
+  // When user chooses "New Chat" — clear everything including enrollment
   const handleNewChat = React.useCallback(() => {
     localStorage.removeItem('conversation_messages');
+    clearEnrollmentStorage();
+    setEnrollmentSubmitted(false);
+    setShowEnrollmentForm(false);
     pendingMessagesRef.current = [];
     setShowResumePrompt(false);
   }, []);
@@ -181,16 +180,23 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       .catch(() => {});
   }, []);
 
+  // Persist enrollment state whenever it changes
   React.useEffect(() => {
-    localStorage.setItem('enrollment_submitted', String(enrollmentSubmitted));
+    try {
+      localStorage.setItem('enrollment_submitted', String(enrollmentSubmitted));
+    } catch {}
   }, [enrollmentSubmitted]);
 
   React.useEffect(() => {
-    localStorage.setItem('conversation_messages', JSON.stringify(state.messages));
+    try {
+      localStorage.setItem('conversation_messages', JSON.stringify(state.messages));
+    } catch {}
   }, [state.messages]);
 
   React.useEffect(() => {
-    localStorage.setItem('conversation_language', state.language);
+    try {
+      localStorage.setItem('conversation_language', state.language);
+    } catch {}
   }, [state.language]);
 
   const MAX_FREE_QUESTIONS = 3;
@@ -212,7 +218,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
     dispatch({ type: 'ADD_USER_MESSAGE', payload: userMessage });
 
-    // If user already filled the form, always reply with a short static message — no AI call needed
+    // If user already filled/dismissed the form, reply with a short static message — no AI call needed
     if (enrollmentSubmitted) {
       const postText = state.language === 'ta'
         ? 'நன்றி! எங்க team விரைவில் உங்களை contact பண்ணி உங்க கேள்விகளுக்கு பதில் சொல்வாங்க!'
@@ -239,12 +245,10 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${backendUrl}/ask`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-        },
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify({
-          question: question,
-          mode: mode,
+          question,
+          mode,
           language: state.language,
         }),
       });
@@ -268,7 +272,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       };
       dispatch({ type: 'ADD_BOT_MESSAGE', payload: botMessage });
 
-      // Count this answer and check if we've hit the limit
+      // Count this answer and check if we've hit the free-question limit
       if (result.type !== 'error') {
         dispatch({ type: 'INCREMENT_QUESTION_COUNT' });
         const newCount = state.questionCount + 1;
@@ -295,15 +299,16 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       }
     } catch (error) {
       console.error('Error asking question:', error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        sender: 'bot',
-        text: 'Sorry, there was an error processing your question. Please try again.',
-        timestamp: Date.now(),
-        type: 'error',
-        isError: true,
-      };
-      dispatch({ type: 'ADD_BOT_MESSAGE', payload: errorMessage });
+      dispatch({
+        type: 'ADD_BOT_MESSAGE', payload: {
+          id: (Date.now() + 1).toString(),
+          sender: 'bot',
+          text: 'Sorry, there was an error processing your question. Please try again.',
+          timestamp: Date.now(),
+          type: 'error',
+          isError: true,
+        }
+      });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
@@ -313,8 +318,13 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     dispatch({ type: 'SET_LANGUAGE', payload: lang });
   }, []);
 
+  // clearMessages also resets enrollment so a fresh chat always starts at 0
   const clearMessages = useCallback(() => {
     dispatch({ type: 'CLEAR_MESSAGES' });
+    setEnrollmentSubmitted(false);
+    setShowEnrollmentForm(false);
+    clearEnrollmentStorage();
+    localStorage.removeItem('conversation_messages');
   }, []);
 
   const value: ConversationContextType = {
