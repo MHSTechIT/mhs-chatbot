@@ -47,10 +47,12 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
             emotion: msg.emotion,
         }));
 
-    // Auto-scroll to latest message
+    // Auto-scroll to latest message — also fires when loading starts so the typing indicator is visible
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 60);
+    }, [messages, isLoading]);
 
     // Auto-play audio for new bot messages (with user interaction trigger)
     useEffect(() => {
@@ -291,7 +293,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                 </div>
             </div>
 
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-3 min-h-0 pb-48 scroll-smooth">
+            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-3 min-h-0 pb-56 scroll-smooth">
                 {messages.map((msg) => (
                     <ChatMessage key={msg.id} message={msg} onReplay={playVoice} isDark={isDark} />
                 ))}
