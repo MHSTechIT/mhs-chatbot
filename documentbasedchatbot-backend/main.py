@@ -56,24 +56,31 @@ from fastapi.responses import JSONResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import asyncio
+
     if _startup_errors:
         log.error(f"App started with {len(_startup_errors)} import error(s)")
     else:
         log.info("✅ App startup complete — all modules loaded")
 
-    # Pre-warm services so first request isn't slow
+    # Pre-warm LLM — run in a thread so blocking network call doesn't freeze the event loop
     try:
         from src.controller.chat_controller import get_health_service
         svc = get_health_service()
-        svc._init_llm()
+        await asyncio.wait_for(asyncio.to_thread(svc._init_llm), timeout=30)
         log.info("✅ Pre-warmed: HealthChatService + LLM ready")
+    except asyncio.TimeoutError:
+        log.warning("Pre-warm timeout: LLM will initialise on first request")
     except Exception as e:
         log.warning(f"Pre-warm skipped: {e}")
 
+    # Pre-warm AdminRepository (DB connection)
     try:
         from src.repository.admin_repo import get_admin_repository
-        get_admin_repository()
+        await asyncio.wait_for(asyncio.to_thread(get_admin_repository), timeout=30)
         log.info("✅ Pre-warmed: AdminRepository loaded")
+    except asyncio.TimeoutError:
+        log.warning("Pre-warm timeout: AdminRepo will load on first request")
     except Exception as e:
         log.warning(f"AdminRepo pre-warm skipped: {e}")
 
