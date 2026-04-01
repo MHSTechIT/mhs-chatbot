@@ -20,7 +20,7 @@ interface ChatContainerProps {
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) => {
-    const { messages: contextMessages, isLoading, language, askQuestion, setLanguage, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted, questionCount } = useConversation();
+    const { messages: contextMessages, isLoading, language, askQuestion, setLanguage, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted, questionCount, hasPlayed, markPlayed } = useConversation();
     const inputBlocked = questionCount >= 3 && !enrollmentSubmitted;
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === 'dark';
@@ -28,7 +28,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
-    const lastPlayedMessageIdRef = useRef<string | null>(null);
     // Ensure we always have the initial greeting message if chat is empty
     const messages: MessageProps[] = contextMessages.length === 0
         ? [
@@ -59,9 +58,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
         if (messages.length === 0) return;
 
         const lastMessage = messages[messages.length - 1];
-        // Play audio only if it's a new bot message we haven't played yet
-        if (lastMessage.sender === 'bot' && !isLoading && lastMessage.id !== lastPlayedMessageIdRef.current) {
-            lastPlayedMessageIdRef.current = lastMessage.id;
+        // Play audio only if it's a new bot message we haven't played yet (shared across pages)
+        if (lastMessage.sender === 'bot' && !isLoading && !hasPlayed(lastMessage.id)) {
+            markPlayed(lastMessage.id);
             // Delay slightly to ensure DOM is ready for audio playback
             setTimeout(() => {
                 // Pass voice settings and emotion label from message

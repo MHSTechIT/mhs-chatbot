@@ -14,12 +14,12 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
   onBackClick,
   avatarImageUrl = avatarImage
 }) => {
-  const { isLoading, language, setLanguage, askQuestion, messages, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted } = useConversation();
+  const { isLoading, language, setLanguage, askQuestion, messages, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted, questionCount, hasPlayed, markPlayed } = useConversation();
+  const inputBlocked = questionCount >= 3 && !enrollmentSubmitted;
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  const lastPlayedMessageIdRef = useRef<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Play audio using ElevenLabs TTS with emotional voice settings
@@ -86,7 +86,23 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
     setIsSpeaking(false);
   }, []);
 
-  const playVoice = async (text: string, voiceSettings?: any, emotionLabel?: string) => {
+  const playVoice = async (text: string, audioUrl?: string, voiceSettings?: any, emotionLabel?: string) => {
+    if (!audioUrl) return;
+    // Static pre-recorded audio (data URL) — play directly
+    if (audioUrl.startsWith('data:audio')) {
+      try {
+        setIsSpeaking(true);
+        if (!audioRef.current) audioRef.current = new Audio();
+        audioRef.current.src = audioUrl;
+        audioRef.current.onended = () => setIsSpeaking(false);
+        audioRef.current.onerror = () => setIsSpeaking(false);
+        await audioRef.current.play().catch(() => setIsSpeaking(false));
+      } catch {
+        setIsSpeaking(false);
+      }
+      return;
+    }
+    // Dynamic TTS via ElevenLabs
     await playAudioUrl(text, voiceSettings, emotionLabel);
   };
 
@@ -95,12 +111,13 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
     if (messages.length === 0) return;
 
     const lastMessage = messages[messages.length - 1];
-    // Play audio only if it's a new bot message we haven't played yet
-    if (lastMessage.sender === 'bot' && !isLoading && lastMessage.id !== lastPlayedMessageIdRef.current) {
-      lastPlayedMessageIdRef.current = lastMessage.id;
-      // Pass voice settings and emotion label from message for expressive speech
+    // Play audio only if it's a new bot message we haven't played yet (shared across pages)
+    if (lastMessage.sender === 'bot' && !isLoading && !hasPlayed(lastMessage.id)) {
+      markPlayed(lastMessage.id);
+      // Pass audioUrl, voice settings and emotion label from message for expressive speech
       playVoice(
         lastMessage.text,
+        (lastMessage as any).audioUrl || 'audio_enabled',
         (lastMessage as any).voice_settings,
         (lastMessage as any).emotion
       );
@@ -124,7 +141,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
 
   // Handle transcription from voice input
   const handleTranscription = useCallback(async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || inputBlocked) return;
 
     // Stop any currently playing audio
     stopAudio();
@@ -137,7 +154,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
     } catch (error) {
       console.error('Error asking question:', error);
     }
-  }, [askQuestion, stopAudio]);
+  }, [askQuestion, stopAudio, inputBlocked]);
 
   const glowFilter = (intensity: number) => {
     const i = intensity;
@@ -236,17 +253,38 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
             <div className="w-2 h-2 bg-theme-accent rounded-full animate-bounce"></div>
           </div>
         )}
-        <SimpleVoiceInput
-          onTranscription={handleTranscription}
-          disabled={isLoading}
-          language={language}
-          onLanguageChange={(lang) => {
-            setLanguage(lang);
-            stopAudio();
-          }}
-          onRecordingStart={stopAudio}
-          variant="overlay"
-        />
+        {isSpeaking ? (
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex gap-2 text-sm">
+              <span className="px-4 py-2 rounded-xl text-sm font-medium bg-white/10 text-white/50 border border-white/20 backdrop-blur-sm select-none">
+                {language === 'ta' ? 'TA' : 'EN'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={stopAudio}
+              className="p-5 rounded-full bg-red-500/30 text-red-300 border-2 border-red-500/60 shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:bg-red-500/50 transition-all duration-300 cursor-pointer"
+              title="Stop speaking"
+            >
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="text-xs text-white/60 text-center">Tap to stop</div>
+          </div>
+        ) : (
+          <SimpleVoiceInput
+            onTranscription={handleTranscription}
+            disabled={isLoading || inputBlocked}
+            language={language}
+            onLanguageChange={(lang) => {
+              setLanguage(lang);
+              stopAudio();
+            }}
+            onRecordingStart={stopAudio}
+            variant="overlay"
+          />
+        )}
       </div>
 
       {/* Hidden audio element for playback */}

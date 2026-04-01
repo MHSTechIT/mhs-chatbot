@@ -33,6 +33,9 @@ export interface ConversationContextType {
   setEnrollmentSubmitted: (submitted: boolean) => void;
   /** Number of questions answered so far (resets on new chat) */
   questionCount: number;
+  /** Track which message IDs have already been played — shared across Chat and Avatar pages */
+  hasPlayed: (id: string) => boolean;
+  markPlayed: (id: string) => void;
 }
 
 const ConversationContext = createContext<ConversationContextType | undefined>(undefined);
@@ -111,6 +114,11 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const pendingMessagesRef = React.useRef<Message[]>([]);
   // Cache for pre-recorded static audio (base64 mp3) — avoids ElevenLabs API calls for fixed messages
   const staticAudioRef = React.useRef<Record<string, string>>({});
+
+  // Shared set of already-played message IDs — prevents replay when switching Chat ↔ Avatar pages
+  const playedMessageIdsRef = React.useRef<Set<string>>(new Set());
+  const hasPlayed = React.useCallback((id: string) => playedMessageIdsRef.current.has(id), []);
+  const markPlayed = React.useCallback((id: string) => { playedMessageIdsRef.current.add(id); }, []);
 
   const [showEnrollmentForm, setShowEnrollmentForm] = React.useState(false);
   const [enrollmentSubmitted, setEnrollmentSubmitted] = React.useState(() => {
@@ -321,6 +329,8 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     enrollmentSubmitted,
     setEnrollmentSubmitted,
     questionCount: state.questionCount,
+    hasPlayed,
+    markPlayed,
   };
 
   return (
