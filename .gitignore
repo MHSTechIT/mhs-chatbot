@@ -19,9 +19,9 @@ dist/
 # PID files
 *.pid
 
-# Uploads & local data
+# Uploads (user files, not tracked)
 uploads/
-data/
+# data/ is tracked so deployed servers get JSON fallback
 
 # OS
 .DS_Store
