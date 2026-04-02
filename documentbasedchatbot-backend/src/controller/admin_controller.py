@@ -393,23 +393,55 @@ async def generate_static_audio():
         db.close()
 
 
+STATIC_AUDIO_CACHE_FILE = "data/static_audio.json"
+
+
+def _load_static_audio_from_file() -> dict:
+    """Load static audio from local JSON file (fallback when DB is unavailable)."""
+    import json
+    try:
+        if os.path.exists(STATIC_AUDIO_CACHE_FILE):
+            with open(STATIC_AUDIO_CACHE_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+
+def _save_static_audio_to_file(audio_map: dict):
+    """Persist static audio to local JSON file so it survives DB outages."""
+    import json
+    try:
+        os.makedirs("data", exist_ok=True)
+        with open(STATIC_AUDIO_CACHE_FILE, "w") as f:
+            json.dump(audio_map, f)
+    except Exception as e:
+        logger.warning(f"Could not save static audio to file: {e}")
+
+
 @router.get("/static-audio")
 async def get_static_audio():
-    """Return all pre-recorded static audio as base64 — frontend caches these in localStorage"""
+    """Return all pre-recorded static audio as base64 — frontend caches these in localStorage.
+    Reads from DB first; falls back to local JSON file if DB is unavailable."""
     from src.models.document import Document
 
-    db = SessionLocal()
+    # Try DB first
     try:
-        docs = db.query(Document).filter(Document.type == "static_audio").all()
-        audio_map = {}
-        for doc in docs:
-            key = doc.title.replace("static_audio:", "")
-            audio_map[key] = doc.content  # base64 mp3
-        return {"success": True, "audio": audio_map}
+        db = SessionLocal()
+        try:
+            docs = db.query(Document).filter(Document.type == "static_audio").all()
+            if docs:
+                audio_map = {doc.title.replace("static_audio:", ""): doc.content for doc in docs}
+                _save_static_audio_to_file(audio_map)  # keep file in sync
+                return {"success": True, "audio": audio_map}
+        finally:
+            db.close()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        db.close()
+        logger.warning(f"DB unavailable for static audio, falling back to file: {e}")
+
+    # Fall back to file cache
+    audio_map = _load_static_audio_from_file()
+    return {"success": True, "audio": audio_map}
 
 
 @router.get("/leads")
