@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { SimpleVoiceInput } from '../components/SimpleVoiceInput';
 import { EnrollmentForm } from '../components/EnrollmentForm';
 import { useConversation } from '../contexts/ConversationContext';
@@ -14,106 +14,21 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
   onBackClick,
   avatarImageUrl = avatarImage
 }) => {
-  const { isLoading, language, setLanguage, askQuestion, messages, showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted, hasPlayed, markPlayed } = useConversation();
+  const {
+    isLoading, language, setLanguage, askQuestion, messages,
+    showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted,
+    hasPlayed, markPlayed,
+    isSpeaking, stopAudio, playVoice,
+  } = useConversation();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
 
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-
-  // Play audio using ElevenLabs TTS with emotional voice settings
-  const playAudioUrl = async (text: string, voiceSettings?: any, emotionLabel?: string) => {
-    if (!text) {
-      console.warn("No text provided for audio generation");
-      return;
-    }
-
-    try {
-      setIsSpeaking(true);
-
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const ttsPayload: any = { text: text, language };
-
-      // Include voice settings if provided
-      if (voiceSettings) {
-        ttsPayload.voice_settings = voiceSettings;
-        ttsPayload.emotion_label = emotionLabel;
-        console.log(`🎭 Avatar TTS - Sending emotional voice settings: ${emotionLabel}`, voiceSettings);
-      }
-
-      const response = await fetch(`${backendUrl}/tts/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ttsPayload)
-      });
-
-      if (!response.ok) {
-        throw new Error(`TTS generation failed: ${response.statusText}`);
-      }
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-      }
-
-      audioRef.current.src = audioUrl;
-      audioRef.current.onplay = () => setIsSpeaking(true);
-      audioRef.current.onended = () => {
-        setIsSpeaking(false);
-        URL.revokeObjectURL(audioUrl);
-      };
-      audioRef.current.onerror = (error) => {
-        console.error("Audio playback error:", error);
-        setIsSpeaking(false);
-        URL.revokeObjectURL(audioUrl);
-      };
-
-      await audioRef.current.play();
-    } catch (error) {
-      console.error("Error generating/playing audio:", error);
-      setIsSpeaking(false);
-    }
-  };
-
-  const stopAudio = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    setIsSpeaking(false);
-  }, []);
-
-  const playVoice = async (text: string, audioUrl?: string, voiceSettings?: any, emotionLabel?: string) => {
-    if (!audioUrl) return;
-    // Static pre-recorded audio (data URL) — play directly
-    if (audioUrl.startsWith('data:audio')) {
-      try {
-        setIsSpeaking(true);
-        if (!audioRef.current) audioRef.current = new Audio();
-        audioRef.current.src = audioUrl;
-        audioRef.current.onended = () => setIsSpeaking(false);
-        audioRef.current.onerror = () => setIsSpeaking(false);
-        await audioRef.current.play().catch(() => setIsSpeaking(false));
-      } catch {
-        setIsSpeaking(false);
-      }
-      return;
-    }
-    // Dynamic TTS via ElevenLabs
-    await playAudioUrl(text, voiceSettings, emotionLabel);
-  };
-
-  // Auto-play audio for new bot messages with emotional voice
+  // Auto-play audio for new bot messages (shared audio — continues across page switches)
   useEffect(() => {
     if (messages.length === 0) return;
-
     const lastMessage = messages[messages.length - 1];
-    // Play audio only if it's a new bot message we haven't played yet (shared across pages)
     if (lastMessage.sender === 'bot' && !isLoading && !hasPlayed(lastMessage.id)) {
       markPlayed(lastMessage.id);
-      // Pass audioUrl, voice settings and emotion label from message for expressive speech
       playVoice(
         lastMessage.text,
         (lastMessage as any).audioUrl || 'audio_enabled',
@@ -126,33 +41,20 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
   // Show enrollment form when bot responds with enrollment_form type
   useEffect(() => {
     if (messages.length === 0 || isLoading || enrollmentSubmitted) return;
-
     const lastMessage = messages[messages.length - 1];
     if (lastMessage.sender !== 'bot') return;
-
     const enrollmentWords = ['join', 'enroll', 'enrollment', 'register', 'course', 'admission', 'apply', 'fees', 'சேர', 'பதிவு', 'கோர்ஸ்'];
     const lastUser = [...messages].reverse().find(m => m.sender === 'user');
     const userAskedEnrollment = lastUser && enrollmentWords.some(w => lastUser.text.toLowerCase().includes(w));
-    const showForm = lastMessage.type === 'enrollment_form' || (lastMessage.type === 'normal' && userAskedEnrollment);
-
-    if (showForm) setShowEnrollmentForm(true);
+    if (lastMessage.type === 'enrollment_form' || (lastMessage.type === 'normal' && userAskedEnrollment)) {
+      setShowEnrollmentForm(true);
+    }
   }, [messages, isLoading, enrollmentSubmitted]);
 
-  // Handle transcription from voice input
   const handleTranscription = useCallback(async (text: string) => {
     if (!text.trim()) return;
-
-    // Stop any currently playing audio
     stopAudio();
-
-    // Use context to ask the question in 'document' mode
-    try {
-      await askQuestion(text, 'document');
-      // Note: TTS playback is handled by the page's playAudioUrl function
-      // if the bot response is set to auto-play, or can be manually triggered
-    } catch (error) {
-      console.error('Error asking question:', error);
-    }
+    await askQuestion(text, 'document');
   }, [askQuestion, stopAudio]);
 
   const glowFilter = (intensity: number) => {
@@ -167,23 +69,17 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
           0%, 100% { filter: ${glowFilter(1)}; }
           50% { filter: ${glowFilter(0.4)}; }
         }
-        .avatar-glow-blink {
-          animation: glowBlink 1.2s ease-in-out infinite;
-        }
+        .avatar-glow-blink { animation: glowBlink 1.2s ease-in-out infinite; }
       `}</style>
-      {/* Full-screen background image - edge-to-edge */}
+
+      {/* Full-screen background image */}
       <div className="absolute inset-0 flex items-center justify-center">
         <img
           src={avatarImageUrl}
           alt="Avatar"
           className={`w-full h-full object-contain object-center ${isSpeaking ? 'avatar-glow-blink' : ''}`}
-          style={
-            isSpeaking
-              ? {}
-              : { filter: glowFilter(0.6), transition: 'filter 0.3s ease' }
-          }
+          style={isSpeaking ? {} : { filter: glowFilter(0.6), transition: 'filter 0.3s ease' }}
         />
-        {/* Gradient overlay for contrast */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -194,7 +90,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
         />
       </div>
 
-      {/* Top right: Theme toggle + Message button */}
+      {/* Top right controls */}
       <div className="absolute top-0 right-0 z-30 flex items-center gap-2 p-4">
         {isSpeaking && (
           <button
@@ -203,7 +99,9 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 bg-theme-accent/20 text-theme-accent rounded-full text-xs font-semibold animate-pulse border border-theme-accent/40 hover:bg-theme-accent/30 cursor-pointer transition-colors backdrop-blur-sm"
             title="Click to stop speaking"
           >
-            <div className="w-1.5 h-1.5 bg-theme-accent rounded-full relative"><div className="absolute inset-0 bg-theme-accent rounded-full animate-ping opacity-75"></div></div>
+            <div className="w-1.5 h-1.5 bg-theme-accent rounded-full relative">
+              <div className="absolute inset-0 bg-theme-accent rounded-full animate-ping opacity-75"></div>
+            </div>
             Speaking
           </button>
         )}
@@ -211,9 +109,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
           type="button"
           onClick={toggleTheme}
           className={`p-2.5 rounded-xl backdrop-blur-sm transition-colors ${
-            isDark
-              ? 'bg-white/10 text-white/80 border border-white/20 hover:bg-white/15'
-              : 'bg-black/10 text-gray-700 border border-gray-300 hover:bg-black/15'
+            isDark ? 'bg-white/10 text-white/80 border border-white/20 hover:bg-white/15' : 'bg-black/10 text-gray-700 border border-gray-300 hover:bg-black/15'
           }`}
           title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
@@ -230,9 +126,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
         <button
           onClick={onBackClick}
           className={`p-2.5 rounded-xl backdrop-blur-sm transition-colors ${
-            isDark
-              ? 'hover:bg-white/10 text-white/80 hover:text-white border border-white/10'
-              : 'hover:bg-black/10 text-gray-700 hover:text-gray-900 border border-gray-300'
+            isDark ? 'hover:bg-white/10 text-white/80 hover:text-white border border-white/10' : 'hover:bg-black/10 text-gray-700 hover:text-gray-900 border border-gray-300'
           }`}
           title="Go to chat"
         >
@@ -242,9 +136,8 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
         </button>
       </div>
 
-      {/* Bottom floating controls - overlay on image */}
+      {/* Bottom floating controls */}
       <div className="absolute bottom-6 left-0 right-0 z-30 flex flex-col items-center gap-4 px-4 sm:bottom-8">
-        {/* Loading indicator - above EN/TA buttons */}
         {isLoading && (
           <div className="flex gap-2 px-5 py-3 bg-black/40 backdrop-blur-md rounded-2xl border border-theme-accent/30">
             <div className="w-2 h-2 bg-theme-accent rounded-full animate-bounce" style={{ animationDelay: '-0.3s' }}></div>
@@ -276,20 +169,13 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
             onTranscription={handleTranscription}
             disabled={isLoading}
             language={language}
-            onLanguageChange={(lang) => {
-              setLanguage(lang);
-              stopAudio();
-            }}
+            onLanguageChange={(lang) => { setLanguage(lang); stopAudio(); }}
             onRecordingStart={stopAudio}
             variant="overlay"
           />
         )}
       </div>
 
-      {/* Hidden audio element for playback */}
-      <audio ref={audioRef} />
-
-      {/* Enrollment Form Modal */}
       {showEnrollmentForm && (() => {
         const hasTamil = (t: string) => /[\u0B80-\u0BFF]/.test(t);
         const lastUserMsg = [...messages].reverse().find(m => m.sender === 'user');

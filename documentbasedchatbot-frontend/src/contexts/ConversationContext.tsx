@@ -36,6 +36,10 @@ export interface ConversationContextType {
   /** Track which message IDs have already been played — shared across Chat and Avatar pages */
   hasPlayed: (id: string) => boolean;
   markPlayed: (id: string) => void;
+  /** Shared audio — persists across page navigation so audio keeps playing when switching pages */
+  isSpeaking: boolean;
+  stopAudio: () => void;
+  playVoice: (text: string, audioUrl?: string, voiceSettings?: any, emotionLabel?: string) => Promise<void>;
 }
 
 const ConversationContext = createContext<ConversationContextType | undefined>(undefined);
@@ -107,6 +111,70 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const playedMessageIdsRef = React.useRef<Set<string>>(new Set());
   const hasPlayed = React.useCallback((id: string) => playedMessageIdsRef.current.has(id), []);
   const markPlayed = React.useCallback((id: string) => { playedMessageIdsRef.current.add(id); }, []);
+
+  // ─── Shared Audio — single Audio element that survives page navigation ───────
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const [isSpeaking, setIsSpeaking] = React.useState(false);
+
+  React.useEffect(() => {
+    audioRef.current = new Audio();
+    return () => { audioRef.current?.pause(); };
+  }, []);
+
+  const stopAudio = React.useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsSpeaking(false);
+  }, []);
+
+  const playVoice = React.useCallback(async (
+    text: string,
+    audioUrl?: string,
+    voiceSettings?: any,
+    emotionLabel?: string
+  ) => {
+    if (!audioUrl || !audioRef.current) return;
+    const audio = audioRef.current;
+
+    // Static pre-recorded audio (data URL) — play directly, no API call
+    if (audioUrl.startsWith('data:audio')) {
+      try {
+        setIsSpeaking(true);
+        audio.src = audioUrl;
+        audio.onended = () => setIsSpeaking(false);
+        audio.onerror = () => setIsSpeaking(false);
+        await audio.play().catch(() => setIsSpeaking(false));
+      } catch { setIsSpeaking(false); }
+      return;
+    }
+
+    // Dynamic TTS via ElevenLabs backend
+    try {
+      setIsSpeaking(true);
+      const backendUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+      const payload: any = { text, language: state.language };
+      if (voiceSettings) { payload.voice_settings = voiceSettings; payload.emotion_label = emotionLabel; }
+
+      const response = await fetch(`${backendUrl}/tts/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error(`TTS failed: ${response.statusText}`);
+
+      const blobUrl = URL.createObjectURL(await response.blob());
+      audio.src = blobUrl;
+      audio.onplay = () => setIsSpeaking(true);
+      audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
+      audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
+      await audio.play().catch(() => setIsSpeaking(false));
+    } catch (err) {
+      console.error('Error generating/playing audio:', err);
+      setIsSpeaking(false);
+    }
+  }, [state.language]);
 
   const [showEnrollmentForm, setShowEnrollmentForm] = React.useState(false);
   // enrollmentSubmitted is NOT loaded from localStorage on init —
@@ -364,6 +432,9 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     questionCount: state.questionCount,
     hasPlayed,
     markPlayed,
+    isSpeaking,
+    stopAudio,
+    playVoice,
   };
 
   return (
