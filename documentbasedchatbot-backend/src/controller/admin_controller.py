@@ -324,6 +324,7 @@ async def submit_enrollment(request: EnrollmentRequest):
 
 # Pre-defined static messages to pre-record once and reuse forever
 STATIC_AUDIO_TEXTS = {
+    "welcome_ta": "சக்கரை நோய் பற்றி உங்களுக்கு ஏதாவது கேள்விகள் இருந்தால், தயங்காம கேளுங்கள்.",
     "enrollment_prompt_en": "For more details and personalized guidance, please fill in the form below — our team will contact you soon!",
     "enrollment_prompt_ta": "நம்ம course பத்தி more details தெரிஞ்சுக்கணும்னா, கீழே உள்ள form-ஐ fill பண்ணுங்க! எங்க team உங்களை விரைவில் contact பண்ணுவாங்க!",
     "post_enrollment_en": "Thank you! Our team will contact you soon and answer all your questions!",

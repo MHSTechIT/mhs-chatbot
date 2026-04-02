@@ -24,18 +24,16 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const messages: MessageProps[] = contextMessages.length === 0
-        ? [{ id: '1', sender: 'bot', text: 'Hi, I am your My Health School assistant how can i help you' }]
-        : contextMessages.map(msg => ({
-            id: msg.id,
-            sender: msg.sender as 'user' | 'bot',
-            text: msg.text,
-            audioUrl: msg.audioUrl,
-            type: msg.type,
-            isError: msg.sender === 'bot' && msg.text.includes('error'),
-            voice_settings: msg.voice_settings,
-            emotion: msg.emotion,
-        }));
+    const messages: MessageProps[] = contextMessages.map(msg => ({
+        id: msg.id,
+        sender: msg.sender as 'user' | 'bot',
+        text: msg.text,
+        audioUrl: msg.audioUrl,
+        type: msg.type,
+        isError: msg.sender === 'bot' && msg.text.includes('error'),
+        voice_settings: msg.voice_settings,
+        emotion: msg.emotion,
+    }));
 
     // Auto-scroll — fires on messages change AND when loading starts (shows typing indicator)
     useEffect(() => {

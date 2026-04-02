@@ -7,7 +7,7 @@ export interface Message {
   text: string;
   audioUrl?: string;
   timestamp: number;
-  type?: 'normal' | 'enrollment_form' | 'error';
+  type?: 'normal' | 'enrollment_form' | 'error' | 'welcome';
   isError?: boolean;
   voice_settings?: {
     stability: number;
@@ -93,6 +93,9 @@ function conversationReducer(state: ConversationState, action: ConversationActio
   }
 }
 
+// The fixed Tamil greeting played at the start of every fresh chat
+const WELCOME_TEXT = 'சக்கரை நோய் பற்றி உங்களுக்கு ஏதாவது கேள்விகள் இருந்தால், தயங்காம கேளுங்கள்.';
+
 // Helper: clear all enrollment-related localStorage keys
 function clearEnrollmentStorage() {
   try {
@@ -100,17 +103,42 @@ function clearEnrollmentStorage() {
   } catch {}
 }
 
+// Load static audio cache from localStorage synchronously (module-level, called once per mount)
+function loadStaticAudioCache(): Record<string, string> {
+  try {
+    const cached = localStorage.getItem('static_audio_cache');
+    return cached ? JSON.parse(cached) : {};
+  } catch { return {}; }
+}
+
 export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(conversationReducer, initialState);
   const [showResumePrompt, setShowResumePrompt] = React.useState(false);
   const pendingMessagesRef = React.useRef<Message[]>([]);
   // Cache for pre-recorded static audio (base64 mp3) — avoids ElevenLabs API calls for fixed messages
-  const staticAudioRef = React.useRef<Record<string, string>>({});
+  // Loaded from localStorage SYNCHRONOUSLY so welcome audio is available before any effect fires
+  const staticAudioRef = React.useRef<Record<string, string>>(loadStaticAudioCache());
 
   // Shared set of already-played message IDs — prevents replay when switching Chat ↔ Avatar pages
   const playedMessageIdsRef = React.useRef<Set<string>>(new Set());
   const hasPlayed = React.useCallback((id: string) => playedMessageIdsRef.current.has(id), []);
   const markPlayed = React.useCallback((id: string) => { playedMessageIdsRef.current.add(id); }, []);
+
+  // Dispatch the Tamil welcome message as the first bot message on fresh/new chats.
+  // Uses pre-generated static audio (no ElevenLabs call) if cached; falls back to live TTS on first-ever visit.
+  const dispatchWelcome = React.useCallback(() => {
+    const b64 = staticAudioRef.current['welcome_ta'];
+    dispatch({
+      type: 'ADD_BOT_MESSAGE', payload: {
+        id: Date.now().toString(),
+        sender: 'bot',
+        text: WELCOME_TEXT,
+        audioUrl: b64 ? `data:audio/mp3;base64,${b64}` : 'audio_enabled',
+        timestamp: Date.now(),
+        type: 'welcome',
+      }
+    });
+  }, []);
 
   // ─── Shared Audio — single Audio element that survives page navigation ───────
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -189,37 +217,45 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (stored) {
       try {
         const messages: Message[] = JSON.parse(stored);
-        if (messages.length > 0) {
-          // Has a previous session — show resume prompt
+        // Count only real conversational messages (exclude welcome banners)
+        const realMessages = messages.filter(m => m.type !== 'welcome');
+        if (realMessages.length > 0) {
+          // Has a real previous session — show resume prompt
           pendingMessagesRef.current = messages;
           setShowResumePrompt(true);
         } else {
-          // Empty array stored — treat as fresh start, clear enrollment
+          // Only welcome message stored (or empty) — treat as fresh start
           clearEnrollmentStorage();
+          dispatchWelcome();
         }
       } catch {
         clearEnrollmentStorage();
+        dispatchWelcome();
       }
     } else {
-      // No stored session at all — fresh start, clear any stale enrollment flag
+      // No stored session at all — fresh start
       clearEnrollmentStorage();
+      dispatchWelcome();
     }
 
     if (storedLang) {
       dispatch({ type: 'SET_LANGUAGE', payload: storedLang });
     }
-  }, []);
+  }, [dispatchWelcome]);
 
   // When user chooses "Continue" previous chat — restore enrollment state too
   const handleResume = React.useCallback(() => {
     const wasEnrolled = localStorage.getItem('enrollment_submitted') === 'true';
     setEnrollmentSubmitted(wasEnrolled);
-    dispatch({ type: 'LOAD_FROM_STORAGE', payload: pendingMessagesRef.current });
+    const msgs = pendingMessagesRef.current;
+    // Mark any stored welcome messages as played so auto-play doesn't replay them
+    msgs.filter(m => m.type === 'welcome').forEach(m => markPlayed(m.id));
+    dispatch({ type: 'LOAD_FROM_STORAGE', payload: msgs });
     pendingMessagesRef.current = [];
     setShowResumePrompt(false);
-  }, []);
+  }, [markPlayed]);
 
-  // When user chooses "New Chat" — clear everything including enrollment
+  // When user chooses "New Chat" — clear everything including enrollment, then show fresh welcome
   const handleNewChat = React.useCallback(() => {
     localStorage.removeItem('conversation_messages');
     clearEnrollmentStorage();
@@ -227,15 +263,11 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setShowEnrollmentForm(false);
     pendingMessagesRef.current = [];
     setShowResumePrompt(false);
-  }, []);
+    dispatchWelcome();
+  }, [dispatchWelcome]);
 
-  // Load pre-recorded static audio from localStorage cache, then refresh from backend
+  // Refresh pre-recorded static audio from backend (localStorage already loaded synchronously above)
   React.useEffect(() => {
-    try {
-      const cached = localStorage.getItem('static_audio_cache');
-      if (cached) staticAudioRef.current = JSON.parse(cached);
-    } catch {}
-
     const backendUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
     fetch(`${backendUrl}/admin/static-audio`)
       .then(r => r.json())
@@ -395,7 +427,8 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setShowEnrollmentForm(false);
     clearEnrollmentStorage();
     localStorage.removeItem('conversation_messages');
-  }, []);
+    dispatchWelcome();
+  }, [dispatchWelcome]);
 
   const value: ConversationContextType = {
     messages: state.messages,
