@@ -146,6 +146,10 @@ class AdminRepository:
             "uploaded_at": datetime.now().isoformat()
         }
 
+        # Invalidate caches so next request reads fresh content from DB
+        self._content_cache = ""
+        self._last_loaded = 0.0
+
         self.save_documents()
         logger.info(f"Document added: {doc_id} - {title}")
         return doc_id
@@ -204,6 +208,11 @@ class AdminRepository:
             logger.warning(f"Could not delete from database: {e}")
 
         del self.documents[doc_id]
+
+        # Invalidate caches immediately so the deleted doc is never served again
+        self._content_cache = ""
+        self._last_loaded = 0.0
+
         self.save_documents()
         logger.info(f"Document deleted: {doc_id}")
         return True
@@ -225,11 +234,10 @@ class AdminRepository:
         return results
 
     def get_documents_content(self) -> str:
-        """Get all document content for RAG — cached in memory, refreshed every 60s"""
-        prev_count = len(self.documents)
-        self.load_documents()  # No-op if cache is fresh (TTL)
-        # Rebuild content string only if docs changed or cache is empty
-        if self._content_cache and len(self.documents) == prev_count:
+        """Get all document content for RAG — cached in memory, refreshed every 60s.
+        Cache is explicitly cleared on add/delete so changes are reflected immediately."""
+        self.load_documents()  # No-op if TTL fresh; reloads from DB if expired or invalidated
+        if self._content_cache:
             return self._content_cache
         content = ""
         logger.info(f"🔍 Assembling content from {len(self.documents)} documents")
