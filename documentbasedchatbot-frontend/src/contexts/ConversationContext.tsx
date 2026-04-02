@@ -169,8 +169,11 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (!audioUrl || !audioRef.current) return;
     const audio = audioRef.current;
 
-    // Static pre-recorded audio (data: URL or direct file URL) — play without ElevenLabs
-    if (audioUrl.startsWith('data:audio') || audioUrl.startsWith('/') || audioUrl.startsWith('http')) {
+    // Static pre-recorded audio — play without ElevenLabs:
+    //   • data:audio/... base64 URLs
+    //   • direct audio file paths like /audio/welcome_ta.mp3 (served by Vercel public/)
+    const isStaticAudio = audioUrl.startsWith('data:audio') || /\.(mp3|wav|ogg|aac)(\?|$)/i.test(audioUrl);
+    if (isStaticAudio) {
       try {
         setIsSpeaking(true);
         if (audioUrl.startsWith('data:audio')) {
