@@ -83,8 +83,8 @@ function conversationReducer(state: ConversationState, action: ConversationActio
       return {
         ...state,
         messages: action.payload,
-        // Count existing bot answers when resuming a conversation
-        questionCount: action.payload.filter(m => m.sender === 'bot' && m.type !== 'error').length,
+        // Count only real AI answers (type='normal') — exclude enrollment prompts and errors
+        questionCount: action.payload.filter(m => m.sender === 'bot' && m.type === 'normal').length,
       };
     case 'INCREMENT_QUESTION_COUNT':
       return { ...state, questionCount: state.questionCount + 1 };
@@ -363,30 +363,9 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       };
       dispatch({ type: 'ADD_BOT_MESSAGE', payload: botMessage });
 
-      // Count this answer and check if we've hit the free-question limit
+      // Count this answer — form gate kicks in on the NEXT question (Q4+)
       if (result.type !== 'error') {
         dispatch({ type: 'INCREMENT_QUESTION_COUNT' });
-        const newCount = state.questionCount + 1;
-
-        if (newCount >= MAX_FREE_QUESTIONS && !enrollmentSubmitted) {
-          const promptText = state.language === 'ta'
-            ? 'நம்ம course பத்தி more details தெரிஞ்சுக்கணும்னா, கீழே உள்ள form-ஐ fill பண்ணுங்க! எங்க team உங்களை விரைவில் contact பண்ணுவாங்க!'
-            : 'For more details and personalized guidance, please fill in the form below — our team will contact you soon!';
-          const audioKey = state.language === 'ta' ? 'enrollment_prompt_ta' : 'enrollment_prompt_en';
-
-          setTimeout(() => {
-            const enrollMsg: Message = {
-              id: (Date.now() + 2).toString(),
-              sender: 'bot',
-              text: promptText,
-              audioUrl: getStaticAudioUrl(audioKey) || '/tts/generate',
-              timestamp: Date.now(),
-              type: 'enrollment_form',
-            };
-            dispatch({ type: 'ADD_BOT_MESSAGE', payload: enrollMsg });
-            setShowEnrollmentForm(true);
-          }, 800);
-        }
       }
     } catch (error) {
       console.error('Error asking question:', error);
