@@ -125,15 +125,18 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const markPlayed = React.useCallback((id: string) => { playedMessageIdsRef.current.add(id); }, []);
 
   // Dispatch the Tamil welcome message as the first bot message on fresh/new chats.
-  // Uses pre-generated static audio (no ElevenLabs call) if cached; falls back to live TTS on first-ever visit.
+  // Uses the base64 from localStorage cache if warm, else the static MP3 bundled with
+  // the Vercel deploy (/audio/welcome_ta.mp3). Either way: zero ElevenLabs credits.
   const dispatchWelcome = React.useCallback(() => {
     const b64 = staticAudioRef.current['welcome_ta'];
+    // b64 cache hit = instant playback; fallback = bundled static MP3 (fetched from Vercel)
+    const audioUrl = b64 ? `data:audio/mp3;base64,${b64}` : '/audio/welcome_ta.mp3';
     dispatch({
       type: 'ADD_BOT_MESSAGE', payload: {
         id: Date.now().toString(),
         sender: 'bot',
         text: WELCOME_TEXT,
-        audioUrl: b64 ? `data:audio/mp3;base64,${b64}` : 'audio_enabled',
+        audioUrl,
         timestamp: Date.now(),
         type: 'welcome',
       }
@@ -166,11 +169,18 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (!audioUrl || !audioRef.current) return;
     const audio = audioRef.current;
 
-    // Static pre-recorded audio (data URL) — play directly, no API call
-    if (audioUrl.startsWith('data:audio')) {
+    // Static pre-recorded audio (data: URL or direct file URL) — play without ElevenLabs
+    if (audioUrl.startsWith('data:audio') || audioUrl.startsWith('/') || audioUrl.startsWith('http')) {
       try {
         setIsSpeaking(true);
-        audio.src = audioUrl;
+        if (audioUrl.startsWith('data:audio')) {
+          audio.src = audioUrl;
+        } else {
+          // Fetch static file and create a blob URL so the Audio element can play it
+          const resp = await fetch(audioUrl);
+          if (!resp.ok) throw new Error(`fetch ${resp.status}`);
+          audio.src = URL.createObjectURL(await resp.blob());
+        }
         audio.onended = () => setIsSpeaking(false);
         audio.onerror = () => setIsSpeaking(false);
         await audio.play().catch(() => setIsSpeaking(false));
