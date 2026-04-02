@@ -7,7 +7,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Use Supabase PostgreSQL database
-DATABASE_URL = os.getenv("DB_CONNECTION", "sqlite:///fallback.db")
+# .strip() removes any accidental trailing newline/whitespace from Render env vars
+DATABASE_URL = os.getenv("DB_CONNECTION", "sqlite:///fallback.db").strip()
 
 # Lazy-load the engine to avoid connection errors on startup
 _engine = None
