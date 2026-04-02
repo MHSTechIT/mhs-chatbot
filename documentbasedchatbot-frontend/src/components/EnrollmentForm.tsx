@@ -37,7 +37,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
 
     try {
       // Send enrollment data to backend
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').trim();
       const response = await fetch(`${backendUrl}/submit-enrollment`, {
         method: 'POST',
         headers: {

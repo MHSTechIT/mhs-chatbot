@@ -29,7 +29,7 @@ export class ChatService implements IChatService {
         try {
 
             // Get API URL from environment variables
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').trim();
             const apiUrl = `${baseUrl}/ask`;
 
             const response = await fetch(apiUrl, {

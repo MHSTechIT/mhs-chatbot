@@ -93,6 +93,9 @@ function conversationReducer(state: ConversationState, action: ConversationActio
   }
 }
 
+// Backend URL — trim() removes the trailing newline that Render/Vercel sometimes injects into env vars
+const BACKEND_URL = ((import.meta as any).env?.VITE_API_URL || 'http://localhost:8000').trim();
+
 // The fixed Tamil greeting played at the start of every fresh chat
 const WELCOME_TEXT = 'சக்கரை நோய் பற்றி உங்களுக்கு ஏதாவது கேள்விகள் இருந்தால், தயங்காம கேளுங்கள்.';
 
@@ -194,11 +197,10 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     // Dynamic TTS via ElevenLabs backend
     try {
       setIsSpeaking(true);
-      const backendUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
       const payload: any = { text, language: state.language };
       if (voiceSettings) { payload.voice_settings = voiceSettings; payload.emotion_label = emotionLabel; }
 
-      const response = await fetch(`${backendUrl}/tts/generate`, {
+      const response = await fetch(`${BACKEND_URL}/tts/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -281,8 +283,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Refresh pre-recorded static audio from backend (localStorage already loaded synchronously above)
   React.useEffect(() => {
-    const backendUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
-    fetch(`${backendUrl}/admin/static-audio`)
+    fetch(`${BACKEND_URL}/admin/static-audio`)
       .then(r => r.json())
       .then(data => {
         if (data?.audio && Object.keys(data.audio).length > 0) {
@@ -378,8 +379,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     dispatch({ type: 'SET_LOADING', payload: true });
 
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${backendUrl}/ask`, {
+      const response = await fetch(`${BACKEND_URL}/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify({

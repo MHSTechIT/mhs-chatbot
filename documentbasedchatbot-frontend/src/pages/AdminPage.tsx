@@ -16,7 +16,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onBackClick }) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [activeTab, setActiveTab] = useState<'upload' | 'leads'>('leads');
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000').trim();
 
   // Fetch leads
   const fetchLeads = async () => {
