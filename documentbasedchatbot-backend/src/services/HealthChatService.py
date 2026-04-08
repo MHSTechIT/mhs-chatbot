@@ -161,8 +161,8 @@ def detect_red_flag_question(text: str) -> bool:
 
 
 RED_FLAG_ANSWER_TA = (
-    "Idhu konjam serious ah theriyudhu. First immediate doctor / hospital consultation mukkiyam. "
-    "Condition stable ஆனதும் safe ah lifestyle guidance pathi pesalaam."
+    "இது மிகவும் தீவிரமான நிலை. உடனே மருத்துவரை அல்லது மருத்துவமனையை நாடுங்கள். "
+    "நிலைமை சரியான பிறகு lifestyle பற்றி பேசலாம்."
 )
 RED_FLAG_ANSWER_EN = (
     "This sounds serious. Please seek urgent in-person medical care or the emergency department first. "
@@ -354,21 +354,19 @@ class HealthChatService:
             policy = (
                 "Fallback: You are MHS lifestyle/metabolic health assistant only. "
                 "No prescriptions. Urgent symptoms → direct to emergency care. "
-                "Tanglish for Tamil UI; simple English for English UI."
+                "Casual Tamil script for Tamil UI; simple English for English UI."
             )
-        if output_language == "tamil":
+        if output_language == “tamil”:
             ui_lock = (
-                "## CRITICAL — TA chat style (this request)\n"
-                "The user selected **TA**. Answer in **casual spoken Tanglish** like WhatsApp: **English + Tamil script in the same sentences**, "
-                "warm and simple. This is NOT formal pure-Tamil prose.\n"
-                "- OK: “Hi!”; words like Namma, rendu; English phrases + Tamil endings: “sugar content அதிகமா இருக்கிற”, "
-                "“blood sugar level-ஐ raise பண்ணும்”, “Namma MHS approach-ல root cause-ஐ address பண்ணி”.\n"
-                "- OK: **2–4 English sentences** at the end for clear tips or a soft CTA (e.g. fruit advice, “Would you like to know more…”).\n"
-                "- **Avoid:** the whole reply in heavy literary Tamil only; avoid a long answer with **zero** Tamil script.\n"
-                "**Reference snippet (match this vibe, adapt to the question):** "
-                "Hi! Sapota milkshake and ice cream renduமே sugar content அதிகமா இருக்கிற food items. "
-                "Diabetes manage பண்றவங்களுக்கு இது blood sugar level-ஐ ரொம்பவே raise பண்ணும். "
-                "Namma MHS approach-ல, root cause-ஐ address பண்ணி, lifestyle-ல சின்ன சின்ன மாற்றங்கள் கொண்டு வர்றதுக்கு focus பண்ணுவோம்.\n"
+                “## CRITICAL — TA chat style (this request)\n”
+                “The user selected **TA**. Write in **casual spoken Tamil** — like a Tamil health advisor speaking to a patient naturally.\n”
+                “- Sentences must be in Tamil script. Most words must be Tamil.\n”
+                “- English is allowed ONLY for key medical/technical terms with no simple Tamil equivalent: diabetes, insulin, sugar level, HbA1c, PCOS, BP, cholesterol, calories, millets. Write these inline, no parentheses.\n”
+                “- Do NOT write Latin-letter Tamil words (like \”namma\”, \”panrom\”, \”sollunga\”, \”approach-la\”) — use Tamil script for Tamil words.\n”
+                “- Do NOT end the reply with English sentences or an English paragraph.\n”
+                “- Warm and simple — not formal or literary Tamil. Short sentences. 3–4 sentences maximum.\n”
+                “**Example of correct style:** “
+                “\”சர்க்கரை நோய் இருந்தா, சாதம் கொஞ்சமா சாப்பிடணும். Blood sugar level control-ல வைக்க millets மிகவும் நல்லது. சாப்பிட்ட பிறகு கொஞ்சம் நடந்தா இன்னும் நல்லா இருக்கும்.\”\n”
             )
         else:
             ui_lock = (
@@ -388,12 +386,11 @@ class HealthChatService:
     def _build_human_content(self, question: str, language: str) -> str:
         if language == "tamil":
             lang_instr = (
-                "App language: **TA** (locked). Reply in **casual Tanglish**: mix **English and Tamil script** naturally in the same reply "
-                "(spoken style, not formal pure Tamil essay).\n"
-                "- Use Tamil script for Tamil words; English for many content words (diabetes, sugar, lifestyle, program, etc.).\n"
-                "- You may add **short English sentences** at the end for tips or a gentle question about the program.\n"
-                "- Do **not** fill the answer with only heavy formal Tamil. Plain text, no markdown.\n"
-                "- **Length: 3–4 sentences maximum. Medium format. Cover the core point and stop. Do not give long lists.**\n"
+                "App language: **TA** (locked). Write in **casual spoken Tamil script**.\n"
+                "- Sentences must be in Tamil script. English only for key medical terms (diabetes, insulin, sugar level, HbA1c, PCOS, BP) — inline, no parentheses.\n"
+                "- Do NOT write Latin-letter Tamil words (like \"namma\", \"panrom\", \"approach-la\"). Use Tamil script for Tamil words.\n"
+                "- Do NOT end with English sentences or an English paragraph.\n"
+                "- **Length: 3–4 sentences. Cover the core point and stop. No lists.**\n"
                 "Follow policy. Never promise to stop medicines or guaranteed cure."
             )
         else:
@@ -484,8 +481,8 @@ class HealthChatService:
                 if is_not_found or len(answer.strip()) < 30:
                     if language == "tamil":
                         answer = _finalize_answer_for_client(
-                            "நம்ம course பத்தி more details தெரிஞ்சுக்கணும்னா, கீழே உள்ள form-ஐ fill பண்ணுங்க! "
-                            "எங்க team உங்களுக்கு soon-ஆ contact பண்ணுவாங்க."
+                            "எங்கள் program பத்தி மேலும் தெரிஞ்சுக்கணும்னா, கீழே உள்ள form-ஐ fill பண்ணுங்க. "
+                            "எங்கள் team விரைவில் உங்களை contact பண்ணுவாங்க."
                         )
                     else:
                         answer = _finalize_answer_for_client(
