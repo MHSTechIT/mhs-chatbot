@@ -5,8 +5,8 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_postgres.vectorstores import PGVector
 from sqlalchemy import create_engine, text
 
-# Database Connection String (set this to your Supabase Postgres URL)
-DB_CONNECTION = os.getenv("DB_CONNECTION", "postgresql+psycopg://admin:password@localhost:5432/vectordb")
+# Database Connection String
+DB_CONNECTION = os.getenv("DB_CONNECTION", "postgresql+psycopg://postgres:%24erver2026@13.234.115.104:5432/AI_FI")
 COLLECTION_NAME = "company_info"
 
 def _create_db_engine():

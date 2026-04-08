@@ -21,11 +21,10 @@ def _get_engine():
             is_postgres = "postgresql" in DATABASE_URL or "postgres" in DATABASE_URL
             connect_args = {}
             if is_postgres:
-                # Force IPv4 + SSL for Supabase pooler on Render (Render has no IPv6)
-                connect_args = {
-                    "sslmode": "require",
-                    "connect_timeout": 10,
-                }
+                connect_args = {"connect_timeout": 10}
+                # SSL is only required for Supabase's connection pooler
+                if "supabase.co" in DATABASE_URL:
+                    connect_args["sslmode"] = "require"
             elif "sqlite" in DATABASE_URL:
                 connect_args = {"timeout": 5}
 

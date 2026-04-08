@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export interface EnrollmentFormProps {
   onClose: () => void;       // called on Cancel — form dismissed, not submitted
@@ -19,9 +19,27 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const isValid = formData.name.trim() && formData.phone.trim() && formData.age.trim() && formData.location.trim();
+
+  const handleCancel = () => {
+    setError(null);
+    setSubmitAttempted(false);
+    onClose();
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading) {
+        setError(null);
+        setSubmitAttempted(false);
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isLoading, onClose]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -30,7 +48,10 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid) return;
+    if (!isValid) {
+      setSubmitAttempted(true);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -85,7 +106,8 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
       sugarLevel: 'Blood Sugar Level',
       submit: 'Submit',
       success: 'Thank you! We will contact you soon.',
-      fillRequired: 'Please fill in all required fields'
+      fillRequired: 'Please fill in all required fields',
+      close: 'Close',
     },
     ta: {
       title: 'fill the form',
@@ -96,7 +118,8 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
       sugarLevel: 'இரத்த சர்க்கரை அளவு',
       submit: 'சமர்ப்பிக்க',
       success: 'நன்றி! நாங்கள் விரைவில் உங்களை தொடர்புகொள்வோம்.',
-      fillRequired: 'தயவுசெய்து அனைத்து கட்டாயமான பகுதிகளை பூர்த்தி செய்யவும்'
+      fillRequired: 'தயவுசெய்து அனைத்து கட்டாயமான பகுதிகளை பூர்த்தி செய்யவும்',
+      close: 'மூடு'
     }
   };
 
@@ -107,13 +130,43 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
     : 'w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500';
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className={`rounded-lg shadow-2xl max-w-md w-full p-6 border transition-colors ${
-        isDark ? 'bg-theme-card border-theme-cardBorder' : 'bg-white border-gray-200'
-      }`}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      role="presentation"
+      onClick={handleCancel}
+    >
+      <div
+        className={`max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border p-6 shadow-2xl transition-colors ${
+          isDark ? 'bg-theme-card border-theme-cardBorder' : 'bg-white border-gray-200'
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="enrollment-form-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         {!submitted ? (
           <>
-            <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>{currentLabels.title}</h2>
+            <div className="mb-6 flex items-start justify-between gap-3">
+              <h2
+                id="enrollment-form-title"
+                className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+              >
+                {currentLabels.title}
+              </h2>
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={isLoading}
+                className={`shrink-0 rounded-lg p-2 text-lg leading-none transition ${
+                  isDark
+                    ? 'text-theme-muted hover:bg-theme-base hover:text-white'
+                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                }`}
+                aria-label={currentLabels.close}
+              >
+                ×
+              </button>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name Field */}
@@ -202,7 +255,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
                 <p className="text-red-600 text-sm bg-red-50 p-2 rounded border border-red-200">{error}</p>
               )}
 
-              {!isValid && !error && (
+              {submitAttempted && !isValid && !error && (
                 <p className="text-red-600 text-sm">{currentLabels.fillRequired}</p>
               )}
 
@@ -210,7 +263,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={handleCancel}
                   disabled={isLoading}
                   className={`flex-1 px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
                     isDark

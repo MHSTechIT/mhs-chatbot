@@ -16,7 +16,8 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
 }) => {
   const {
     isLoading, language, setLanguage, askQuestion, messages,
-    showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted,
+    showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted,
+    enrollmentCancelled, setEnrollmentCancelled, handleEnrollmentSubmitted,
     hasPlayed, markPlayed,
     isSpeaking, stopAudio, playVoice,
   } = useConversation();
@@ -38,18 +39,14 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
     }
   }, [messages, isLoading]);
 
-  // Show enrollment form when bot responds with enrollment_form type
   useEffect(() => {
-    if (messages.length === 0 || isLoading || enrollmentSubmitted) return;
+    if (messages.length === 0 || isLoading || enrollmentSubmitted || enrollmentCancelled) return;
     const lastMessage = messages[messages.length - 1];
     if (lastMessage.sender !== 'bot') return;
-    const enrollmentWords = ['join', 'enroll', 'enrollment', 'register', 'course', 'admission', 'apply', 'fees', 'சேர', 'பதிவு', 'கோர்ஸ்'];
-    const lastUser = [...messages].reverse().find(m => m.sender === 'user');
-    const userAskedEnrollment = lastUser && enrollmentWords.some(w => lastUser.text.toLowerCase().includes(w));
-    if (lastMessage.type === 'enrollment_form' || (lastMessage.type === 'normal' && userAskedEnrollment)) {
+    if (lastMessage.type === 'enrollment_form') {
       setShowEnrollmentForm(true);
     }
-  }, [messages, isLoading, enrollmentSubmitted]);
+  }, [messages, isLoading, enrollmentSubmitted, enrollmentCancelled, setShowEnrollmentForm]);
 
   const handleTranscription = useCallback(async (text: string) => {
     if (!text.trim()) return;
@@ -182,8 +179,8 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
         const formLang: 'en' | 'ta' = lastUserMsg && !hasTamil(lastUserMsg.text) ? 'en' : language;
         return (
           <EnrollmentForm
-            onClose={() => setShowEnrollmentForm(false)}
-            onSubmit={() => setEnrollmentSubmitted(true)}
+            onClose={() => { setShowEnrollmentForm(false); setEnrollmentCancelled(true); }}
+            onSubmit={handleEnrollmentSubmitted}
             language={formLang}
             isDark={isDark}
           />

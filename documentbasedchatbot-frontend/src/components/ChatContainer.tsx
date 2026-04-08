@@ -15,7 +15,8 @@ interface ChatContainerProps {
 export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) => {
     const {
         messages: contextMessages, isLoading, language, askQuestion, setLanguage,
-        showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted, setEnrollmentSubmitted,
+        showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted,
+        enrollmentCancelled, setEnrollmentCancelled, handleEnrollmentSubmitted,
         hasPlayed, markPlayed,
         isSpeaking, stopAudio, playVoice,
     } = useConversation();
@@ -54,18 +55,17 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
         }
     }, [messages, isLoading]);
 
-    // Show enrollment form when bot responds with enrollment_form type
+    // Open enrollment modal only when the app explicitly marks a message as enrollment_form
+    // (free-question gate or post-submit flow). Do NOT infer from keywords like "course" in normal chat.
+    // enrollmentCancelled guard prevents re-showing after user explicitly dismisses the form.
     useEffect(() => {
-        if (messages.length === 0 || isLoading || enrollmentSubmitted) return;
+        if (messages.length === 0 || isLoading || enrollmentSubmitted || enrollmentCancelled) return;
         const lastMessage = messages[messages.length - 1];
         if (lastMessage.sender !== 'bot') return;
-        const enrollmentWords = ['join', 'enroll', 'enrollment', 'register', 'course', 'admission', 'apply', 'fees', 'சேர', 'பதிவு', 'கோர்ஸ்'];
-        const lastUser = [...messages].reverse().find(m => m.sender === 'user');
-        const userAskedEnrollment = lastUser && enrollmentWords.some(w => lastUser.text.toLowerCase().includes(w));
-        if (lastMessage.type === 'enrollment_form' || (lastMessage.type === 'normal' && userAskedEnrollment)) {
+        if (lastMessage.type === 'enrollment_form') {
             setShowEnrollmentForm(true);
         }
-    }, [messages, isLoading, enrollmentSubmitted]);
+    }, [messages, isLoading, enrollmentSubmitted, enrollmentCancelled, setShowEnrollmentForm]);
 
     const handleSendMessage = useCallback(async (text: string) => {
         if (!text.trim()) return;
@@ -75,8 +75,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
     }, [stopAudio, askQuestion]);
 
     return (
-        <div className={`flex flex-col w-full h-screen transition-colors ${isDark ? 'bg-theme-base' : 'bg-white'}`}>
-            <div className={`px-6 py-3 border-b flex items-center justify-between z-20 shrink-0 sticky top-0 transition-colors ${
+        <div className={`flex h-full min-h-0 w-full flex-col transition-colors ${isDark ? 'bg-theme-base' : 'bg-white'}`}>
+            <div className={`z-20 flex shrink-0 items-center justify-between border-b px-6 py-3 transition-colors ${
                 isDark ? 'bg-theme-card border-theme-cardBorder' : 'bg-gray-50 border-gray-200'
             }`}>
                 <div className="flex items-center gap-3">
@@ -130,7 +130,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                 </div>
             </div>
 
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-3 min-h-0 pb-56 scroll-smooth">
+            <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto overflow-x-hidden scroll-smooth p-4 pb-6 sm:p-6 sm:pb-8">
                 {messages.map((msg) => (
                     <ChatMessage key={msg.id} message={msg} onReplay={playVoice} isDark={isDark} />
                 ))}
@@ -157,9 +157,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className={`fixed bottom-0 left-0 right-0 px-4 py-4 border-t z-20 space-y-3 transition-colors ${
-                isDark ? 'bg-theme-card border-theme-cardBorder' : 'bg-gray-50 border-gray-200'
-            }`}>
+            <div
+                className={`z-20 w-full shrink-0 space-y-3 border-t px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] transition-colors ${
+                    isDark ? 'bg-theme-card border-theme-cardBorder' : 'bg-gray-50 border-gray-200'
+                }`}
+            >
                 <div className="flex items-end gap-3">
                     <SimpleVoiceInput
                         onTranscription={handleSendMessage}
@@ -182,8 +184,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                 const formLang: 'en' | 'ta' = lastUserMsg && !hasTamil(lastUserMsg.text) ? 'en' : language;
                 return (
                     <EnrollmentForm
-                        onClose={() => setShowEnrollmentForm(false)}
-                        onSubmit={() => setEnrollmentSubmitted(true)}
+                        onClose={() => { setShowEnrollmentForm(false); setEnrollmentCancelled(true); }}
+                        onSubmit={handleEnrollmentSubmitted}
                         language={formLang}
                         isDark={isDark}
                     />

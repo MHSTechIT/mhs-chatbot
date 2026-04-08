@@ -14,7 +14,7 @@ const AppContent: React.FC = () => {
       isDark ? 'bg-theme-base text-white' : 'bg-white text-gray-900'
     }`}>
         {/* Page Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {currentPage === 'chat' ? (
             <ChatContainer onAvatarClick={() => setCurrentPage('avatar')} />
           ) : (

@@ -3,262 +3,258 @@ import logging
 import requests
 import re
 
+from langchain_core.messages import HumanMessage, SystemMessage
+
 logger = logging.getLogger(__name__)
 
-# gemini-2.5-flash-lite: fastest, lowest latency, works for new API keys
+
+def _clean_text_for_tts(text: str) -> str:
+    """Remove markdown noise for plain UI + TTS (mirrors ChatService.clean_text_for_tts)."""
+    if not text:
+        return text
+    text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"__(.+?)__", r"\1", text)
+    text = re.sub(r"[*_]", "", text)
+    text = re.sub(r"\[(.+?)\]", r"\1", text)
+    text = re.sub(r"\(https?://[^\)]+\)", "", text)
+    text = re.sub(r"^[\s\-*•]+", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
 GEMINI_MODEL = "gemini-2.5-flash-lite"
 
-# Language detection - detect if text is Tamil, Tanglish, or English
-def detect_language(text: str) -> str:
-    """Detect language: 'tamil', 'tanglish', or 'english'."""
-    # Tamil Unicode range: U+0B80 to U+0BFF
-    tamil_pattern = r'[\u0B80-\u0BFF]'
-    has_tamil = bool(re.search(tamil_pattern, text))
-    if has_tamil:
-        return 'tamil'  # Tamil or Tanglish (Tamil + English)
-    else:
-        return 'english'  # English only
+SYSTEM_ROLE_PREAMBLE = """You are the AI assistant for My Health School (MHS). You MUST follow every rule in the policy below. Do not contradict it. Do not give medical prescriptions or emergency treatment plans."""
 
-# Tamil-to-English keyword mapping for common health terms
-TAMIL_TO_ENGLISH_KEYWORDS = {
-    'சர்க்கரை': 'diabetes',
-    'நோய்': 'disease',
-    'சர்க்கரை நோய்': 'diabetes',
-    'குணமாக்க': 'reverse',
-    'குணம்': 'cure',
-    'நிறுத்த': 'stop',
-    'தடுக்க': 'prevent',
-    'சிகிச்சை': 'treatment',
-    'மருந்து': 'medicine',
-    'மாத்திரை': 'tablet',
-    'உணவு': 'diet',
-    'உணவுக்கட்டுப்பாடு': 'diet control',
-    'உடல் பயிற்சி': 'exercise',
-    'தவ': 'fast',
-    'விளக்கம்': 'information',
-    'பற்றி': 'about',
-    'பற்றி சொல்ல': 'tell about',
-    'என்ன': 'what',
-    'எப்படி': 'how',
-    'ஆரம்ப': 'initial',
-    'இரத்தம்': 'blood',
-    'அளவு': 'level',
-}
+def _rules_file_path() -> str:
+    backend_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    env_path = os.getenv("MHS_RULES_PATH")
+    if env_path:
+        return env_path
+    return os.path.join(backend_root, "config", "mhs_assistant_rules.md")
 
-# Translate Tamil question to English for document search
-def translate_tamil_to_english(text: str, llm) -> str:
-    """Translate Tamil question to English for better document matching."""
+
+def load_mhs_rules() -> str:
+    path = _rules_file_path()
     try:
-        # First, try keyword replacement for common terms
-        translated = text.lower()
-        for tamil, english in TAMIL_TO_ENGLISH_KEYWORDS.items():
-            translated = translated.replace(tamil.lower(), english.lower())
+        with open(path, encoding="utf-8") as f:
+            text = f.read().strip()
+            if text:
+                logger.info(f"MHS rules loaded from {path} ({len(text)} chars)")
+            return text
+    except OSError as e:
+        logger.error(f"MHS rules file missing or unreadable: {path} — {e}")
+        return ""
 
-        # If keyword replacement produced something meaningful, use it
-        if len(translated) > 5 and translated != text.lower():
-            logger.info(f"🔤 Tamil→English (keyword): '{text[:50]}' → '{translated[:50]}'")
-            return translated
 
-        # Fallback: use LLM for translation
-        from langchain_core.messages import HumanMessage
-        translate_prompt = f"""Translate the following Tamil question to English. Return ONLY the English translation, nothing else.
+def detect_language(text: str) -> str:
+    tamil_pattern = r"[\u0B80-\u0BFF]"
+    if re.search(tamil_pattern, text):
+        return "tamil"
+    return "english"
 
-Tamil: {text}
 
-English translation:"""
-
-        messages = [HumanMessage(content=translate_prompt)]
-        response = llm.invoke(messages)
-        translated = response.content.strip() if response.content else text
-        logger.info(f"🔤 Tamil→English (LLM): '{text[:50]}' → '{translated[:50]}'")
-        return translated
-    except Exception as e:
-        logger.warning(f"Translation failed: {e}, using original text")
-        return text
-
-# Detect if user is asking about joining/enrolling in the program
 def detect_enrollment_query(text: str) -> bool:
-    """Detect if user is asking about joining program, webinar, or course."""
     if not text or not text.strip():
         return False
 
     enrollment_keywords_en = [
-        'join', 'enroll', 'enrollment', 'register', 'sign up', 'how to join',
-        'subscribe', 'admission', 'application', 'apply',
-        'i want to', 'i would like to', 'can i join', 'how do i join',
-        'want to enroll', 'want to register', 'want to participate',
-        'course', 'fees', 'fee', 'program', 'how can i join', 'interested in joining'
+        "join", "enroll", "enrollment", "register", "sign up", "how to join",
+        "subscribe", "admission", "application", "apply",
+        "i want to", "i would like to", "can i join", "how do i join",
+        "want to enroll", "want to register", "want to participate",
+        "course", "fees", "fee", "program", "how can i join", "interested in joining",
     ]
 
-    # Tamil keywords - ONLY enrollment-specific keywords (removed generic words like "எப்படி" that cause false positives)
     enrollment_keywords_ta = [
-        'சேர',      # join (base form)
-        'சேர்',      # join (alternate)
-        'சேரண',     # should join
-        'சேரணும்',   # should join
-        'சேர்ந்து',   # joined
-        'சேர்க்க',   # to join
-        'சேர்க',     # join
-        'பதிவு',     # registration
-        'விண்ணப்பம்', # application
-        'கட்ணம்',    # fees
-        'செலவு',     # cost
-        'பணம்',      # money
-        # English words transliterated in Tamil script
-        'ஜாயின்',    # join (English in Tamil script)
-        'எனரோல்',   # enroll (English in Tamil script)
-        'ரெஜிஸ்டர்', # register (English in Tamil script)
-        'கோர்ஸ்',    # course (English in Tamil script)
+        "சேர", "சேர்", "சேரண", "சேரணும்", "சேர்ந்து", "சேர்க்க", "சேர்க",
+        "பதிவு", "விண்ணப்பம்", "கட்ணம்", "செலவு", "பணம்",
+        "ஜாயின்", "எனரோல்", "ரெஜிஸ்டர்", "கோர்ஸ்",
     ]
 
     text_lower = text.lower()
 
-    # Debug: Log text info
-    logger.debug(f"🔍 Checking enrollment - Text: '{text[:50]}', Len: {len(text)}, Bytes: {text.encode('utf-8')[:50]}")
-
-    # Check English keywords first
     for keyword in enrollment_keywords_en:
         if keyword in text_lower:
             logger.info(f"📝 Enrollment detected (EN): '{keyword}' in '{text[:50]}'")
             return True
 
-    # Check Tamil keywords - these are case-sensitive
-    # Try checking the original text directly
     for keyword in enrollment_keywords_ta:
         if keyword in text:
             logger.info(f"📝 Enrollment detected (TA): '{keyword}' in '{text[:50]}'")
             return True
 
-    # Additional check: if text contains any Tamil character and has enrollment-like structure
-    has_tamil = bool(re.search(r'[\u0B80-\u0BFF]', text))
-    logger.debug(f"🔍 Has Tamil chars: {has_tamil}")
-
+    has_tamil = bool(re.search(r"[\u0B80-\u0BFF]", text))
     if has_tamil:
-        # Check for word patterns like "சேர" or "பதிவு" or transliterated English words
-        critical_kws = ['சேர', 'பதிவு', 'சேர்', 'சேரணும்', 'விண்ணப்பம்', 'ஜாயின்', 'எனரோல்', 'ரெஜிஸ்டர்', 'கோர்ஸ்']
+        critical_kws = [
+            "சேர", "பதிவு", "சேர்", "சேரணும்", "விண்ணப்பம்",
+            "ஜாயின்", "எனரோல்", "ரெஜிஸ்டர்", "கோர்ஸ்",
+        ]
         matched = [kw for kw in critical_kws if kw in text]
-        logger.debug(f"🔍 Critical keyword matches: {matched}")
-
         if matched:
             logger.info(f"📝 Enrollment detected (TA pattern): {matched} in '{text[:50]}'")
             return True
 
     return False
 
-# Emotion Detection - Keywords for different tones
+
+# Section 8 — lightweight pre-LLM gate (English / Latin script; Tanglish keywords)
+_RED_FLAG_SUBSTRINGS_EN = [
+    "chest pain", "crushing chest", "heart attack",
+    "shortness of breath", "cannot breathe", "can't breathe", "breathlessness",
+    "blood in stool", "bloody stool",
+    "severe abdominal pain", "severe stomach pain",
+    "passed out", "lost consciousness", "fainting spell",
+    "repeated vomiting", "nonstop vomiting", "can't stop vomiting",
+    "kidney failure", "on dialysis", "dialysis",
+    "severe dehydration",
+    "severe hypoglycemia", "severe low blood sugar",
+    "emergency room", "call 911", "call 108",
+    "blood sugar 350", "blood sugar 400", "blood sugar 500",
+    "sugar 350", "sugar 400", "glucose 350", "glucose 400",
+    "reading 350", "reading 400", "sugar above 300", "sugar over 300",
+    "glucose above 300", "more than 300 mg", "above 300 mg",
+]
+
+_RED_FLAG_TAMIL = [
+    "மார்பு வலி", "மூச்சு விட முடியவில்லை", "மயக்கம்",
+]
+
+
+def detect_red_flag_question(text: str) -> bool:
+    if not text or len(text.strip()) < 3:
+        return False
+    t = text.lower()
+    for s in _RED_FLAG_SUBSTRINGS_EN:
+        if s in t:
+            logger.warning(f"Red-flag substring matched: {s!r}")
+            return True
+    for s in _RED_FLAG_TAMIL:
+        if s in text:
+            logger.warning(f"Red-flag Tamil phrase matched: {s!r}")
+            return True
+    sugar_ctx = re.search(
+        r"(blood\s*sugar|sugar\s*level|glucose|\brbs\b|\bfbs\b|\bppbs\b|random\s*sugar)",
+        t,
+    )
+    if sugar_ctx:
+        m = re.search(r"\b(3[0-9]{2}|[4-9][0-9]{2})\b", t)
+        if m and int(m.group(1)) >= 300:
+            logger.warning("Red-flag: glucose reading >= 300 with sugar context")
+            return True
+
+    preg = "pregnant" in t or "pregnancy" in t
+    if preg and any(
+        x in t
+        for x in (
+            "uncontrolled",
+            "ketone",
+            "ketoacidosis",
+            "very high sugar",
+            "sugar very high",
+            "emergency",
+        )
+    ):
+        logger.warning("Red-flag: pregnancy with acute glucose crisis wording")
+        return True
+    return False
+
+
+RED_FLAG_ANSWER_TA = (
+    "Idhu konjam serious ah theriyudhu. First immediate doctor / hospital consultation mukkiyam. "
+    "Condition stable ஆனதும் safe ah lifestyle guidance pathi pesalaam."
+)
+RED_FLAG_ANSWER_EN = (
+    "This sounds serious. Please seek urgent in-person medical care or the emergency department first. "
+    "Once you are stable, we can discuss lifestyle guidance safely."
+)
+
 EMOTION_KEYWORDS = {
-    'empathetic': ['understand', 'sorry', 'concerned', 'care', 'help you', 'pain', 'suffer', 'difficult', 'challenge'],
-    'encouraging': ['great', 'excellent', 'wonderful', 'success', 'improve', 'healthy', 'strong', 'confident', 'achieve'],
-    'informative': ['research shows', 'studies', 'evidence', 'according', 'findings', 'clinical', 'data', 'proven'],
-    'conversational': ['let me', 'think about', 'consider', 'perhaps', 'likely', 'you might', 'could be'],
-    'professional': ['treatment', 'medication', 'consult', 'doctor', 'medical', 'condition', 'diagnosis', 'therapy']
+    "empathetic": ["understand", "sorry", "concerned", "care", "help you", "pain", "suffer", "difficult", "challenge"],
+    "encouraging": ["great", "excellent", "wonderful", "success", "improve", "healthy", "strong", "confident", "achieve"],
+    "informative": ["research shows", "studies", "evidence", "according", "findings", "clinical", "data", "proven"],
+    "conversational": ["let me", "think about", "consider", "perhaps", "likely", "you might", "could be"],
+    "professional": ["treatment", "medication", "consult", "doctor", "medical", "condition", "diagnosis", "therapy"],
 }
 
-# Function to detect emotional tone and return settings
+
 def detect_emotion_and_get_settings(text: str):
-    """
-    Detect emotional tone from response text and return emotion tag + optimized voice settings.
-    Returns: (emotion_type, emotion_label, voice_settings_dict)
-    """
     text_lower = text.lower()
     emotion_scores = {emotion: 0 for emotion in EMOTION_KEYWORDS}
 
-    # Count keyword matches
     for emotion, keywords in EMOTION_KEYWORDS.items():
         for keyword in keywords:
             emotion_scores[emotion] += text_lower.count(keyword)
 
-    # Determine dominant emotion
     max_emotion = max(emotion_scores, key=emotion_scores.get)
 
-    # Map emotions to voice settings for ElevenLabs
     emotion_settings = {
-        'empathetic': {
-            'stability': 0.35,           # Lower stability = warmer, more emotional
-            'similarity_boost': 0.80,    # Slightly lower for warmth
-            'style': 0.85,               # High style for emotional expression
-            'use_speaker_boost': True,
-            'emotion_label': '🤝 Empathetic'
+        "empathetic": {
+            "stability": 0.35,
+            "similarity_boost": 0.80,
+            "style": 0.85,
+            "use_speaker_boost": True,
+            "emotion_label": "🤝 Empathetic",
         },
-        'encouraging': {
-            'stability': 0.50,           # Moderate stability for uplifting tone
-            'similarity_boost': 0.90,    # Higher for confident delivery
-            'style': 0.95,               # Maximum style for enthusiasm
-            'use_speaker_boost': True,
-            'emotion_label': '✨ Encouraging'
+        "encouraging": {
+            "stability": 0.50,
+            "similarity_boost": 0.90,
+            "style": 0.95,
+            "use_speaker_boost": True,
+            "emotion_label": "✨ Encouraging",
         },
-        'informative': {
-            'stability': 0.65,           # Higher stability for clarity
-            'similarity_boost': 0.85,    # Clear natural voice
-            'style': 0.75,               # Moderate style for professional tone
-            'use_speaker_boost': True,
-            'emotion_label': '📊 Informative'
+        "informative": {
+            "stability": 0.65,
+            "similarity_boost": 0.85,
+            "style": 0.75,
+            "use_speaker_boost": True,
+            "emotion_label": "📊 Informative",
         },
-        'conversational': {
-            'stability': 0.45,           # Lower for natural flow
-            'similarity_boost': 0.80,    # Natural conversational quality
-            'style': 0.80,               # Good style for engaging tone
-            'use_speaker_boost': True,
-            'emotion_label': '💬 Conversational'
+        "conversational": {
+            "stability": 0.45,
+            "similarity_boost": 0.80,
+            "style": 0.80,
+            "use_speaker_boost": True,
+            "emotion_label": "💬 Conversational",
         },
-        'professional': {
-            'stability': 0.70,           # High stability for authority
-            'similarity_boost': 0.90,    # Clear and confident
-            'style': 0.70,               # Lower style for formal tone
-            'use_speaker_boost': True,
-            'emotion_label': '👨‍⚕️ Professional'
-        }
+        "professional": {
+            "stability": 0.70,
+            "similarity_boost": 0.90,
+            "style": 0.70,
+            "use_speaker_boost": True,
+            "emotion_label": "👨‍⚕️ Professional",
+        },
     }
 
-    # Use detected emotion or default
     if emotion_scores[max_emotion] > 0:
         selected_emotion = max_emotion
     else:
-        selected_emotion = 'conversational'  # Default tone
+        selected_emotion = "conversational"
 
-    settings = emotion_settings[selected_emotion]
-    emotion_label = settings.pop('emotion_label')
+    settings = emotion_settings[selected_emotion].copy()
+    emotion_label = settings.pop("emotion_label")
 
     logger.info(f"🎭 Detected emotion: {emotion_label} (Score: {emotion_scores[selected_emotion]})")
 
     return selected_emotion, emotion_label, settings
 
-# Tamil Prompt - Casual Tanglish, SHORT answer
-TAMIL_PROMPT = """⚠️ MANDATORY: You MUST write your answer in TAMIL SCRIPT. Do NOT write in English only.
 
-You are a friendly assistant from My Health School.
+def _resolve_output_language(req_language: str, question: str) -> str:
+    rl = (req_language or "").lower().strip()
+    if rl in ("ta", "tamil", "tanglish"):
+        return "tamil"
+    if rl in ("en", "english"):
+        return "english"
+    return detect_language(question)
 
-LANGUAGE: Write in casual Tanglish — Tamil script with English words naturally mixed in.
-Good example: "ஆமா, நம்ம 6 months program-ல blood sugar-ஐ naturally reverse பண்ணலாம்! Diet + lifestyle change மூலமா medicine-free ஆகலாம் 😊"
-Bad example (DO NOT DO THIS): "Yes, you can reverse diabetes in 6 months through diet."
 
-LENGTH: 2-3 sentences ONLY. No lists. No long paragraphs.
+def _finalize_answer_for_client(raw: str) -> str:
+    """Plain text for UI + TTS: markdown cleanup and pointer emoji noise."""
+    t = _clean_text_for_tts(raw)
+    t = t.replace("👉", " ").replace("👍", " ")
+    t = re.sub(r"\s+", " ", t).strip()
+    return t
 
-CONTENT: Answer ONLY from the documents below. If not found: "அந்த info என்கிட்ட இல்லை!"
-
-Documents:
-{documents_context}
-
-Question: {question}
-
-Tamil Tanglish answer (2-3 sentences, Tamil script REQUIRED):"""
-
-# English Prompt - SHORT answer
-ENGLISH_PROMPT = """You are a friendly assistant from My Health School. Answer ONLY from the documents below.
-
-STRICT LENGTH RULE: Answer in EXACTLY 2-3 sentences. No more. Be direct and clear.
-
-RULES:
-- Answer ONLY from documents. If not in documents: "I don't have that information."
-- 2-3 sentences MAX — no long lists, no multiple paragraphs
-- Friendly, conversational tone
-
-Documents:
-{documents_context}
-
-Question: {question}
-
-Short answer (2-3 sentences only):"""
 
 def _get_admin_repo():
     from src.repository.admin_repo import get_admin_repository
@@ -266,69 +262,56 @@ def _get_admin_repo():
 
 
 class HealthChatService:
-    """Ultra-fast Tamil health Q&A for My Health School."""
+    """MHS lifestyle assistant: policy-grounded Gemini answers + ElevenLabs TTS hook."""
 
     def __init__(self):
-        """Initialize with fastest configuration and document repository."""
         logger.info("HealthChatService initializing...")
 
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
         if not self.google_api_key:
             raise ValueError("GOOGLE_API_KEY not set")
 
-        self.llm = None  # Lazy init
+        self.llm = None
+        self._mhs_rules = load_mhs_rules()
 
         self.elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
         self.elevenlabs_voice_id = os.getenv("ELEVENLABS_VOICE_ID")
-        self.elevenlabs_url = f"https://api.elevenlabs.io/v1/text-to-speech/{self.elevenlabs_voice_id}/stream"
+        self.elevenlabs_url = (
+            f"https://api.elevenlabs.io/v1/text-to-speech/{self.elevenlabs_voice_id}/stream"
+            if self.elevenlabs_voice_id
+            else ""
+        )
 
         logger.info("HealthChatService ready")
 
     def _init_llm(self):
-        """Lazy initialize LLM on first use."""
         if self.llm is None:
-            try:
-                from langchain_google_genai import ChatGoogleGenerativeAI
-                from langchain_core.messages import HumanMessage
+            from langchain_google_genai import ChatGoogleGenerativeAI
 
-                logger.info(f"Initializing LLM: {GEMINI_MODEL}")
-                self.llm = ChatGoogleGenerativeAI(
-                    model=GEMINI_MODEL,
-                    temperature=0.7,
-                    google_api_key=self.google_api_key,
-                    timeout=30,
-                    max_tokens=200,
-                    top_p=0.95,
-                )
-                logger.info(f"LLM initialized: {GEMINI_MODEL}")
-            except Exception as e:
-                logger.error(f"LLM init failed: {str(e)}")
-                raise
+            logger.info(f"Initializing LLM: {GEMINI_MODEL}")
+            self.llm = ChatGoogleGenerativeAI(
+                model=GEMINI_MODEL,
+                temperature=0.55,
+                google_api_key=self.google_api_key,
+                timeout=45,
+                max_tokens=640,
+                top_p=0.92,
+            )
+            logger.info(f"LLM initialized: {GEMINI_MODEL}")
 
     def generate_tts_url(self, text: str, voice_settings: dict = None) -> dict:
-        """
-        Generate TTS audio via ElevenLabs with emotional voice settings.
-
-        Args:
-            text: The text to convert to speech
-            voice_settings: Optional ElevenLabs voice settings dict with emotion-based parameters
-
-        Returns:
-            Dict with audio metadata and emotion information
-        """
         if not self.elevenlabs_api_key or not text:
-            return {'success': False, 'audio_url': None, 'emotion': None}
+            return {"success": False, "audio_url": None, "emotion": None}
 
         try:
-            # Use provided voice settings or detect emotion from text
             if voice_settings is None:
                 _, emotion_label, voice_settings = detect_emotion_and_get_settings(text)
             else:
-                emotion_label = voice_settings.get('emotion_label', 'Custom')
+                emotion_label = voice_settings.get("emotion_label", "Custom")
 
             payload = {
                 "text": text,
-                "model_id": "eleven_turbo_v2_5",
+                "model_id": "eleven_multilingual_v2",
                 "voice_settings": {
                     "stability": voice_settings.get("stability", 0.45),
                     "similarity_boost": voice_settings.get("similarity_boost", 0.85),
@@ -353,145 +336,175 @@ class HealthChatService:
             if response.status_code == 200:
                 logger.info(f"✅ TTS audio generated successfully with {emotion_label} voice")
                 return {
-                    'success': True,
-                    'audio_url': "audio_generated",
-                    'emotion': emotion_label,
-                    'voice_settings': payload['voice_settings']
+                    "success": True,
+                    "audio_url": "audio_generated",
+                    "emotion": emotion_label,
+                    "voice_settings": payload["voice_settings"],
                 }
-            else:
-                logger.error(f"❌ ElevenLabs error {response.status_code}: {response.text[:100]}")
-                return {'success': False, 'audio_url': None, 'emotion': None}
+            logger.error(f"❌ ElevenLabs error {response.status_code}: {response.text[:100]}")
+            return {"success": False, "audio_url": None, "emotion": None}
 
         except Exception as e:
             logger.error(f"❌ TTS error: {str(e)}")
-            return {'success': False, 'audio_url': None, 'emotion': None}
+            return {"success": False, "audio_url": None, "emotion": None}
+
+    def _build_system_content(self, supplemental_docs: str, output_language: str) -> str:
+        policy = self._mhs_rules.strip() if self._mhs_rules else ""
+        if not policy:
+            policy = (
+                "Fallback: You are MHS lifestyle/metabolic health assistant only. "
+                "No prescriptions. Urgent symptoms → direct to emergency care. "
+                "Tanglish for Tamil UI; simple English for English UI."
+            )
+        if output_language == "tamil":
+            ui_lock = (
+                "## CRITICAL — TA chat style (this request)\n"
+                "The user selected **TA**. Answer in **casual spoken Tanglish** like WhatsApp: **English + Tamil script in the same sentences**, "
+                "warm and simple. This is NOT formal pure-Tamil prose.\n"
+                "- OK: “Hi!”; words like Namma, rendu; English phrases + Tamil endings: “sugar content அதிகமா இருக்கிற”, "
+                "“blood sugar level-ஐ raise பண்ணும்”, “Namma MHS approach-ல root cause-ஐ address பண்ணி”.\n"
+                "- OK: **2–4 English sentences** at the end for clear tips or a soft CTA (e.g. fruit advice, “Would you like to know more…”).\n"
+                "- **Avoid:** the whole reply in heavy literary Tamil only; avoid a long answer with **zero** Tamil script.\n"
+                "**Reference snippet (match this vibe, adapt to the question):** "
+                "Hi! Sapota milkshake and ice cream renduமே sugar content அதிகமா இருக்கிற food items. "
+                "Diabetes manage பண்றவங்களுக்கு இது blood sugar level-ஐ ரொம்பவே raise பண்ணும். "
+                "Namma MHS approach-ல, root cause-ஐ address பண்ணி, lifestyle-ல சின்ன சின்ன மாற்றங்கள் கொண்டு வர்றதுக்கு focus பண்ணுவோம்.\n"
+            )
+        else:
+            ui_lock = (
+                "## CRITICAL — Active UI language (this request only)\n"
+                "The user selected **EN** in the app. Write the **entire** reply in simple, warm English.\n"
+            )
+        parts = [SYSTEM_ROLE_PREAMBLE, "", ui_lock, "## Policy", policy]
+        if supplemental_docs and supplemental_docs.strip():
+            parts.extend([
+                "",
+                "## Optional internal facts (schedules, fees, links)",
+                "Use only when relevant. Never contradict the policy above.",
+                supplemental_docs.strip(),
+            ])
+        return "\n".join(parts)
+
+    def _build_human_content(self, question: str, language: str) -> str:
+        if language == "tamil":
+            lang_instr = (
+                "App language: **TA** (locked). Reply in **casual Tanglish**: mix **English and Tamil script** naturally in the same reply "
+                "(spoken style, not formal pure Tamil essay).\n"
+                "- Use Tamil script for Tamil words; English for many content words (diabetes, sugar, lifestyle, program, etc.).\n"
+                "- You may add **short English sentences** at the end for tips or a gentle question about the program.\n"
+                "- Do **not** fill the answer with only heavy formal Tamil. Short to medium. Plain text, no markdown.\n"
+                "Follow policy section 4. Never promise to stop medicines or guaranteed cure."
+            )
+        else:
+            lang_instr = (
+                "App language: **EN** (locked). Respond in simple, warm English only. "
+                "Short to medium length. Plain text only — no markdown headings, no bullet markdown. "
+                "Follow policy section 4. Never promise to stop medicines or guaranteed cure."
+            )
+        return f"User question:\n{question}\n\n{lang_instr}"
 
     async def ask_question(self, question: str, req_language: str = "") -> dict:
-        """Fast Tamil/Tanglish/English response with uploaded document context."""
         if not question or not question.strip():
             return {
                 "answer": "தயவுசெய்து ஒரு கேள்வி கேளுங்கள்.",
                 "type": "error",
-                "audio_url": None
+                "audio_url": None,
             }
 
-        # Determine language: frontend selection takes priority over auto-detection
-        if req_language in ("ta", "tamil"):
-            language = "tamil"
-            logger.info(f"🆕 Language: tamil (from request param) - Q: {question[:50]}")
-        else:
-            language = detect_language(question)
-            logger.info(f"🆕 Language: {language} (auto-detected) - Q: {question[:50]}")
+        language = _resolve_output_language(req_language, question)
+        logger.info(f"🆕 Output language: {language} (req={req_language!r}) — Q: {question[:50]}")
 
-        # Check if this is an enrollment/program inquiry
+        if detect_red_flag_question(question):
+            ans = RED_FLAG_ANSWER_TA if language == "tamil" else RED_FLAG_ANSWER_EN
+            ans = _finalize_answer_for_client(ans)
+            _, emotion_label, voice_settings = detect_emotion_and_get_settings(ans)
+            audio_url = "/tts/generate" if self.elevenlabs_api_key else None
+            return {
+                "answer": ans,
+                "type": "normal",
+                "audio_url": audio_url,
+                "emotion": emotion_label,
+                "voice_settings": voice_settings if emotion_label else None,
+            }
+
         is_enrollment = detect_enrollment_query(question)
         if is_enrollment:
-            logger.info("📝 Enrollment inquiry detected - will show form AND answer from documents")
+            logger.info("📝 Enrollment inquiry detected")
 
         try:
-
-            # Initialize LLM on first use
             self._init_llm()
-            from langchain_core.messages import HumanMessage
 
-            # Gemini handles cross-lingual QA natively — no translation needed
-            # (removed extra LLM call that was doubling latency for Tamil questions)
-            search_question = question
-
-            # 📄 Retrieve documents from admin repository (singleton — no DB call per request)
-            documents_content = ""
+            supplemental = ""
             try:
                 admin_repo = _get_admin_repo()
-                logger.debug(f"📚 Documents in repository: {len(admin_repo.documents)}")
-                documents_content = admin_repo.get_documents_content()
-
-                if documents_content:
-                    logger.info(f"📚 Retrieved documents from admin repository - {len(documents_content)} chars")
-                else:
-                    logger.warning("⚠️ No documents found in repository")
+                doc_content = admin_repo.get_documents_content()
+                if doc_content and doc_content.strip():
+                    supplemental = doc_content
+                    logger.info(f"📚 Supplemental admin documents: {len(supplemental)} chars")
             except Exception as e:
-                logger.warning(f"Error retrieving documents: {str(e)}")
-                import traceback
-                logger.warning(traceback.format_exc())
-                documents_content = ""
-            if documents_content and documents_content.strip():
-                if language == 'tamil':
-                    documents_context = f"\nUploaded Documents and Links (Katikai Katippu):\n{documents_content}"
-                else:
-                    documents_context = f"\nUploaded Documents and Links:\n{documents_content}"
-            else:
-                documents_context = ""
+                logger.warning(f"Supplemental documents unavailable: {e}")
 
-            # Select prompt based on language
-            if language == 'tamil':
-                prompt = TAMIL_PROMPT.format(
-                    question=question,
-                    documents_context=documents_context
-                )
-                logger.info("🔤 Using Tamil prompt")
-            else:
-                prompt = ENGLISH_PROMPT.format(
-                    question=question,
-                    documents_context=documents_context
-                )
-                logger.info("🔤 Using English prompt")
-            messages = [HumanMessage(content=prompt)]
+            system_content = self._build_system_content(supplemental, language)
+            human_content = self._build_human_content(question.strip(), language)
 
-            # Fast generation
+            messages = [
+                SystemMessage(content=system_content),
+                HumanMessage(content=human_content),
+            ]
+
             response = self.llm.invoke(messages)
-            answer = response.content.strip() if response.content else ""
+            answer = (response.content or "").strip()
 
             if not answer:
-                answer = "Unable to generate answer." if language == 'english' else "பதிலை உருவாக்க முடியவில்லை."
+                answer = "Unable to generate answer." if language == "english" else "பதிலை உருவாக்க முடியவில்லை."
 
-            logger.info(f"✅ Response ({language}): {answer[:60]}")
+            answer = _finalize_answer_for_client(answer)
 
-            # Detect emotion from answer for expressive TTS
-            emotion, emotion_label, voice_settings = detect_emotion_and_get_settings(answer)
-            logger.info(f"🎭 Response emotion detected: {emotion_label}")
+            logger.info(f"✅ Response ({language}): {answer[:80]}")
 
-            # Signal TTS endpoint — frontend will call /tts/generate separately
-            audio_url = None
-            emotion_tag = emotion_label
-            if self.elevenlabs_api_key:
-                audio_url = "/tts/generate"
-                logger.info(f"✅ TTS endpoint ready with {emotion_tag}")
+            _, emotion_label, voice_settings = detect_emotion_and_get_settings(answer)
+            audio_url = "/tts/generate" if self.elevenlabs_api_key else None
 
-            # Determine response type - if enrollment query, show form + answer
             response_type = "enrollment_form" if is_enrollment else "normal"
 
-            # If enrollment detected, always give a helpful enrollment message
             if is_enrollment:
                 not_found_indicators = [
-                    "i don't have this information",
+                    "i don't have",
                     "என்னிடம் இந்த தகவல் இல்லை",
                     "இந்த தகவல் கிடைக்கவில்லை",
-                    "the requested information is not available",
+                    "not available",
+                    "outside my scope",
+                    "cannot answer",
                 ]
-                answer_lower = answer.lower().strip()
+                answer_lower = answer.lower()
                 is_not_found = any(ind in answer_lower for ind in not_found_indicators)
 
                 if is_not_found or len(answer.strip()) < 30:
-                    if language == 'tamil':
-                        answer = "நம்ம course பத்தி more details தெரிஞ்சுக்கணும்னா, கீழே உள்ள form-ஐ fill பண்ணுங்க! எங்க team உங்களுக்கு soon-ஆ contact பண்ணுவாங்க 😊"
+                    if language == "tamil":
+                        answer = _finalize_answer_for_client(
+                            "நம்ம course பத்தி more details தெரிஞ்சுக்கணும்னா, கீழே உள்ள form-ஐ fill பண்ணுங்க! "
+                            "எங்க team உங்களுக்கு soon-ஆ contact பண்ணுவாங்க."
+                        )
                     else:
-                        answer = "To know more about our course, please fill in the form below. Our support team will contact you soon."
-                    logger.info("📝 Replaced not-found with enrollment guidance message")
+                        answer = _finalize_answer_for_client(
+                            "To know more about our course, please fill in the form below. "
+                            "Our support team will contact you soon."
+                        )
+                    _, emotion_label, voice_settings = detect_emotion_and_get_settings(answer)
 
             return {
                 "answer": answer,
                 "type": response_type,
                 "audio_url": audio_url,
-                "emotion": emotion_tag,
-                "voice_settings": voice_settings if emotion_tag else None
+                "emotion": emotion_label,
+                "voice_settings": voice_settings if emotion_label else None,
             }
 
         except Exception as e:
             error_msg = str(e)
             logger.error(f"❌ Error: {error_msg}")
-            # Return the actual error message for debugging
             return {
-                "answer": f"[NEW_CODE] Error: {error_msg[:100]}",
+                "answer": f"Error: {error_msg[:100]}",
                 "type": "error",
-                "audio_url": None
+                "audio_url": None,
             }
