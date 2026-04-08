@@ -356,17 +356,17 @@ class HealthChatService:
                 "No prescriptions. Urgent symptoms → direct to emergency care. "
                 "Casual Tamil script for Tamil UI; simple English for English UI."
             )
-        if output_language == “tamil”:
+        if output_language == "tamil":
             ui_lock = (
-                “## CRITICAL — TA chat style (this request)\n”
-                “The user selected **TA**. Write in **casual spoken Tamil** — like a Tamil health advisor speaking to a patient naturally.\n”
-                “- Sentences must be in Tamil script. Most words must be Tamil.\n”
-                “- English is allowed ONLY for key medical/technical terms with no simple Tamil equivalent: diabetes, insulin, sugar level, HbA1c, PCOS, BP, cholesterol, calories, millets. Write these inline, no parentheses.\n”
-                “- Do NOT write Latin-letter Tamil words (like \”namma\”, \”panrom\”, \”sollunga\”, \”approach-la\”) — use Tamil script for Tamil words.\n”
-                “- Do NOT end the reply with English sentences or an English paragraph.\n”
-                “- Warm and simple — not formal or literary Tamil. Short sentences. 3–4 sentences maximum.\n”
-                “**Example of correct style:** “
-                “\”சர்க்கரை நோய் இருந்தா, சாதம் கொஞ்சமா சாப்பிடணும். Blood sugar level control-ல வைக்க millets மிகவும் நல்லது. சாப்பிட்ட பிறகு கொஞ்சம் நடந்தா இன்னும் நல்லா இருக்கும்.\”\n”
+                "## CRITICAL — TA chat style (this request)\n"
+                "The user selected **TA**. Write in **casual spoken Tamil** — like a Tamil health advisor speaking to a patient naturally.\n"
+                "- Sentences must be in Tamil script. Most words must be Tamil.\n"
+                "- English is allowed ONLY for key medical/technical terms with no simple Tamil equivalent: diabetes, insulin, sugar level, HbA1c, PCOS, BP, cholesterol, calories, millets. Write these inline, no parentheses.\n"
+                "- Do NOT write Latin-letter Tamil words (like \"namma\", \"panrom\", \"sollunga\", \"approach-la\") — use Tamil script for Tamil words.\n"
+                "- Do NOT end the reply with English sentences or an English paragraph.\n"
+                "- Warm and simple — not formal or literary Tamil. Short sentences. 3–4 sentences maximum.\n"
+                "**Example of correct style:** "
+                "\"சர்க்கரை நோய் இருந்தா, சாதம் கொஞ்சமா சாப்பிடணும். Blood sugar level control-ல வைக்க millets மிகவும் நல்லது. சாப்பிட்ட பிறகு கொஞ்சம் நடந்தா இன்னும் நல்லா இருக்கும்.\"\n"
             )
         else:
             ui_lock = (
