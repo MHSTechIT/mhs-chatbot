@@ -159,12 +159,12 @@ async def generate_tts_audio(request: TTSRequest):
             }
             emotion_label = request.emotion_label or "Custom"
         else:
-            # Natural Tamil-optimised defaults: lower stability for expressive intonation,
-            # moderate style avoids robotic over-exaggeration
+            # Natural Tamil-optimised defaults: mid-range stability for clear, steady voice;
+            # low style prevents theatrical over-exaggeration
             voice_settings = {
-                "stability": 0.35,
-                "similarity_boost": 0.82,
-                "style": 0.45,
+                "stability": 0.55,
+                "similarity_boost": 0.80,
+                "style": 0.15,
                 "use_speaker_boost": True,
             }
             emotion_label = "Default"

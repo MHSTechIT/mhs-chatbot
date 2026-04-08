@@ -177,6 +177,14 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (!audioUrl || !audioRef.current) return;
     const audio = audioRef.current;
 
+    // Always stop and clean up previous audio before starting a new one.
+    // This prevents overlapping playback and stale onended handlers firing on the wrong clip.
+    audio.pause();
+    audio.currentTime = 0;
+    audio.onended = null;
+    audio.onerror = null;
+    audio.onplay = null;
+
     // Static pre-recorded audio — play without ElevenLabs:
     //   • data:audio/... base64 URLs
     //   • direct audio file paths like /audio/welcome_ta.mp3 (served by Vercel public/)
@@ -184,16 +192,18 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (isStaticAudio) {
       try {
         setIsSpeaking(true);
+        let srcUrl: string;
         if (audioUrl.startsWith('data:audio')) {
-          audio.src = audioUrl;
+          srcUrl = audioUrl;
         } else {
           // Fetch static file and create a blob URL so the Audio element can play it
           const resp = await fetch(audioUrl);
           if (!resp.ok) throw new Error(`fetch ${resp.status}`);
-          audio.src = URL.createObjectURL(await resp.blob());
+          srcUrl = URL.createObjectURL(await resp.blob());
         }
-        audio.onended = () => setIsSpeaking(false);
-        audio.onerror = () => setIsSpeaking(false);
+        audio.src = srcUrl;
+        audio.onended = () => { setIsSpeaking(false); if (srcUrl.startsWith('blob:')) URL.revokeObjectURL(srcUrl); };
+        audio.onerror = () => { setIsSpeaking(false); if (srcUrl.startsWith('blob:')) URL.revokeObjectURL(srcUrl); };
         await audio.play().catch(() => setIsSpeaking(false));
       } catch { setIsSpeaking(false); }
       return;
@@ -213,11 +223,12 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       if (!response.ok) throw new Error(`TTS failed: ${response.statusText}`);
 
       const blobUrl = URL.createObjectURL(await response.blob());
+      // Check if a newer playVoice call started while we were fetching — if so, abort
+      if (!audioRef.current || audioRef.current !== audio) return;
       audio.src = blobUrl;
-      audio.onplay = () => setIsSpeaking(true);
       audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
       audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
-      await audio.play().catch(() => setIsSpeaking(false));
+      await audio.play().catch(() => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); });
     } catch (err) {
       console.error('Error generating/playing audio:', err);
       setIsSpeaking(false);
