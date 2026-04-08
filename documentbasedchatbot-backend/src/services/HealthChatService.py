@@ -294,7 +294,7 @@ class HealthChatService:
                 temperature=0.55,
                 google_api_key=self.google_api_key,
                 timeout=45,
-                max_tokens=640,
+                max_tokens=420,
                 top_p=0.92,
             )
             logger.info(f"LLM initialized: {GEMINI_MODEL}")
@@ -392,14 +392,16 @@ class HealthChatService:
                 "(spoken style, not formal pure Tamil essay).\n"
                 "- Use Tamil script for Tamil words; English for many content words (diabetes, sugar, lifestyle, program, etc.).\n"
                 "- You may add **short English sentences** at the end for tips or a gentle question about the program.\n"
-                "- Do **not** fill the answer with only heavy formal Tamil. Short to medium. Plain text, no markdown.\n"
-                "Follow policy section 4. Never promise to stop medicines or guaranteed cure."
+                "- Do **not** fill the answer with only heavy formal Tamil. Plain text, no markdown.\n"
+                "- **Length: 3–4 sentences maximum. Medium format. Cover the core point and stop. Do not give long lists.**\n"
+                "Follow policy. Never promise to stop medicines or guaranteed cure."
             )
         else:
             lang_instr = (
                 "App language: **EN** (locked). Respond in simple, warm English only. "
-                "Short to medium length. Plain text only — no markdown headings, no bullet markdown. "
-                "Follow policy section 4. Never promise to stop medicines or guaranteed cure."
+                "Plain text only — no markdown headings, no bullet points. "
+                "**Length: 3–4 sentences maximum. Medium format. Cover the key point clearly and stop. Do not give long lists.**\n"
+                "Follow policy. Never promise to stop medicines or guaranteed cure."
             )
         return f"User question:\n{question}\n\n{lang_instr}"
 
