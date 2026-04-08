@@ -14,7 +14,7 @@ def check_database_connection():
     print("1. DATABASE CONNECTION TEST")
     print("="*60)
 
-    db_url = os.getenv("DB_CONNECTION", "postgresql+psycopg://postgres:%24erver2026@13.234.115.104:5432/AI_FI")
+    db_url = os.getenv("DB_CONNECTION", "postgresql+psycopg://postgres:%24erver2026@13.234.115.104:5432/QNA_BOT")
     print(f"Connection string (masked): {db_url[:50]}...")
 
     try:
