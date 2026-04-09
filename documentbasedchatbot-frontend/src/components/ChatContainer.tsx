@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { ChatMessage, type MessageProps } from './ChatMessage';
 import { TextInput } from './TextInput';
 import { SimpleVoiceInput } from './SimpleVoiceInput';
@@ -15,11 +15,15 @@ interface ChatContainerProps {
 export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) => {
     const {
         messages: contextMessages, isLoading, language, askQuestion, setLanguage,
-        showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted,
+        enrollmentFormCount, enrollmentSubmitted,
         enrollmentCancelled, setEnrollmentCancelled, handleEnrollmentSubmitted,
         hasPlayed, markPlayed,
         isSpeaking, stopAudio, playVoice,
     } = useConversation();
+
+    // Local form visibility — isolated from context so cancel is always instant
+    const [showEnrollmentForm, setShowEnrollmentForm] = useState(false);
+    const lastEnrollmentCountRef = useRef(0);
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -55,17 +59,15 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
         }
     }, [messages, isLoading]);
 
-    // Open enrollment modal only when the app explicitly marks a message as enrollment_form
-    // (free-question gate or post-submit flow). Do NOT infer from keywords like "course" in normal chat.
-    // enrollmentCancelled guard prevents re-showing after user explicitly dismisses the form.
+    // Show enrollment form when context fires a new trigger (enrollmentFormCount increments).
+    // Using a ref to track the last count seen — form only opens for genuinely NEW triggers.
+    // Local state means cancel is always instant and page navigation auto-closes the form.
     useEffect(() => {
-        if (messages.length === 0 || isLoading || enrollmentSubmitted || enrollmentCancelled) return;
-        const lastMessage = messages[messages.length - 1];
-        if (lastMessage.sender !== 'bot') return;
-        if (lastMessage.type === 'enrollment_form') {
+        if (enrollmentFormCount > lastEnrollmentCountRef.current && !enrollmentSubmitted && !enrollmentCancelled) {
+            lastEnrollmentCountRef.current = enrollmentFormCount;
             setShowEnrollmentForm(true);
         }
-    }, [messages, isLoading, enrollmentSubmitted, enrollmentCancelled, setShowEnrollmentForm]);
+    }, [enrollmentFormCount, enrollmentSubmitted, enrollmentCancelled]);
 
     const handleSendMessage = useCallback(async (text: string) => {
         if (!text.trim()) return;

@@ -25,9 +25,8 @@ export interface ConversationContextType {
   askQuestion: (question: string, mode?: string) => Promise<void>;
   setLanguage: (lang: 'en' | 'ta') => void;
   clearMessages: () => void;
-  /** Shared across Chat and Avatar pages - form visible state */
-  showEnrollmentForm: boolean;
-  setShowEnrollmentForm: (show: boolean) => void;
+  /** Increments each time the enrollment form should be shown — pages respond locally */
+  enrollmentFormCount: number;
   /** True after user submits or cancels - prevents form from showing again */
   enrollmentSubmitted: boolean;
   setEnrollmentSubmitted: (submitted: boolean) => void;
@@ -235,7 +234,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, [state.language]);
 
-  const [showEnrollmentForm, setShowEnrollmentForm] = React.useState(false);
+  const [enrollmentFormCount, setEnrollmentFormCount] = React.useState(0);
   // enrollmentSubmitted is NOT loaded from localStorage on init —
   // it is only restored when we explicitly resume a previous chat session.
   const [enrollmentSubmitted, setEnrollmentSubmitted] = React.useState(false);
@@ -298,7 +297,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     localStorage.removeItem('conversation_messages');
     clearEnrollmentStorage();
     setEnrollmentSubmitted(false);
-    setShowEnrollmentForm(false);
     setEnrollmentCancelled(false);
     setAwaitingEnrollmentResponse(false);
     pendingMessagesRef.current = [];
@@ -424,7 +422,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
         if (yn === 'yes') {
           setAwaitingEnrollmentResponse(false);
           setEnrollmentCancelled(false);
-          setTimeout(() => setShowEnrollmentForm(true), 300);
+          setTimeout(() => setEnrollmentFormCount(c => c + 1), 300);
         } else if (yn === 'no') {
           setAwaitingEnrollmentResponse(false);
           const noText = state.language === 'ta'
@@ -460,7 +458,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
         }
       } else {
         // First time hitting the gate — ask yes/no question
-        setEnrollmentCancelled(false);
         setAwaitingEnrollmentResponse(true);
         const askText = state.language === 'ta'
           ? 'நம்ம team-கிட்ட நேரடியா பேசணும்னு நினைக்கிறீங்களா?'
@@ -551,7 +548,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const clearMessages = useCallback(() => {
     dispatch({ type: 'CLEAR_MESSAGES' });
     setEnrollmentSubmitted(false);
-    setShowEnrollmentForm(false);
     setEnrollmentCancelled(false);
     setAwaitingEnrollmentResponse(false);
     clearEnrollmentStorage();
@@ -566,8 +562,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     askQuestion,
     setLanguage,
     clearMessages,
-    showEnrollmentForm,
-    setShowEnrollmentForm,
+    enrollmentFormCount,
     enrollmentSubmitted,
     setEnrollmentSubmitted,
     enrollmentCancelled,

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { SimpleVoiceInput } from '../components/SimpleVoiceInput';
 import { EnrollmentForm } from '../components/EnrollmentForm';
 import { useConversation } from '../contexts/ConversationContext';
@@ -16,11 +16,15 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
 }) => {
   const {
     isLoading, language, setLanguage, askQuestion, messages,
-    showEnrollmentForm, setShowEnrollmentForm, enrollmentSubmitted,
+    enrollmentFormCount, enrollmentSubmitted,
     enrollmentCancelled, setEnrollmentCancelled, handleEnrollmentSubmitted,
     hasPlayed, markPlayed,
     isSpeaking, stopAudio, playVoice,
   } = useConversation();
+
+  // Local form visibility — isolated from context so cancel is always instant
+  const [showEnrollmentForm, setShowEnrollmentForm] = useState(false);
+  const lastEnrollmentCountRef = useRef(0);
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -39,14 +43,15 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
     }
   }, [messages, isLoading]);
 
+  // Show enrollment form when context fires a new trigger (enrollmentFormCount increments).
+  // Using a ref to track the last count seen — form only opens for genuinely NEW triggers.
+  // Local state means cancel is always instant and page navigation auto-closes the form.
   useEffect(() => {
-    if (messages.length === 0 || isLoading || enrollmentSubmitted || enrollmentCancelled) return;
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage.sender !== 'bot') return;
-    if (lastMessage.type === 'enrollment_form') {
+    if (enrollmentFormCount > lastEnrollmentCountRef.current && !enrollmentSubmitted && !enrollmentCancelled) {
+      lastEnrollmentCountRef.current = enrollmentFormCount;
       setShowEnrollmentForm(true);
     }
-  }, [messages, isLoading, enrollmentSubmitted, enrollmentCancelled, setShowEnrollmentForm]);
+  }, [enrollmentFormCount, enrollmentSubmitted, enrollmentCancelled]);
 
   const handleTranscription = useCallback(async (text: string) => {
     if (!text.trim()) return;
