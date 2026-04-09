@@ -239,11 +239,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   // it is only restored when we explicitly resume a previous chat session.
   const [enrollmentSubmitted, setEnrollmentSubmitted] = React.useState(false);
   // enrollmentCancelled prevents the effect from re-showing the form after explicit dismissal
-  // (e.g. switching pages, isLoading change). Resets when user asks another question.
   const [enrollmentCancelled, setEnrollmentCancelled] = React.useState(false);
-  // awaitingEnrollmentResponse = true after the bot asks "do you want to talk to our team?"
-  // The user's next message is interpreted as yes/no rather than a health question.
-  const [awaitingEnrollmentResponse, setAwaitingEnrollmentResponse] = React.useState(false);
 
   // On mount: check for saved messages and decide resume vs fresh start
   React.useEffect(() => {
@@ -283,7 +279,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const handleResume = React.useCallback(() => {
     const wasEnrolled = localStorage.getItem('enrollment_submitted') === 'true';
     setEnrollmentSubmitted(wasEnrolled);
-    setAwaitingEnrollmentResponse(false);
     const msgs = pendingMessagesRef.current;
     // Mark any stored welcome messages as played so auto-play doesn't replay them
     msgs.filter(m => m.type === 'welcome').forEach(m => markPlayed(m.id));
@@ -298,7 +293,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     clearEnrollmentStorage();
     setEnrollmentSubmitted(false);
     setEnrollmentCancelled(false);
-    setAwaitingEnrollmentResponse(false);
     pendingMessagesRef.current = [];
     setShowResumePrompt(false);
     dispatchWelcome();
@@ -344,20 +338,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     return b64 ? `data:audio/mp3;base64,${b64}` : undefined;
   };
 
-  // Helper: detect whether a message is a "yes" or "no" response to the enrollment prompt
-  const detectYesNo = (text: string): 'yes' | 'no' | 'other' => {
-    const t = text.trim().toLowerCase();
-    const words = new Set(t.split(/\s+/));
-    const yesWords = ['yes', 'yeah', 'yep', 'yup', 'sure', 'ok', 'okay', 'ya', 'yaa', 'ha', 'haan', 'connect', 'contact', 'speak', 'talk'];
-    const yesFull = ['of course', 'yes please', 'definitely'];
-    const yesTamil = ['ஆமா', 'ஆம்', 'ஆமாம்', 'சரி', 'ஒகே', 'யெஸ்', 'பேசணும்', 'வேணும்'];
-    const noWords = ['no', 'nope', 'nah'];
-    const noFull = ['not now', 'later', 'no thanks', 'not interested', 'not really'];
-    const noTamil = ['வேண்டாம்', 'வேண்டா', 'வேண்டாம'];
-    if (yesWords.some(w => words.has(w)) || yesFull.some(p => t.includes(p)) || yesTamil.some(p => text.includes(p))) return 'yes';
-    if (noWords.some(w => words.has(w)) || noFull.some(p => t.includes(p)) || noTamil.some(p => text.includes(p))) return 'no';
-    return 'other';
-  };
 
   // Called after the enrollment form is successfully submitted.
   // Dispatches a thank-you bot message that auto-plays the static recorded voice.
@@ -413,68 +393,33 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       return;
     }
 
-    // If user has used all free questions but hasn't submitted the form yet →
-    // ask "do you want to talk to our team?" and wait for yes/no before showing the form
+    // After 4 free questions — show the enrollment form directly with the prompt audio.
+    // No yes/no gate. First hit plays the enrollment audio; subsequent hits (after cancel)
+    // re-open the form silently so the user is not spammed with repeated audio.
     if (state.questionCount >= MAX_FREE_QUESTIONS) {
-      if (awaitingEnrollmentResponse) {
-        // Interpret user's message as a yes/no answer to the team-connect question
-        const yn = detectYesNo(question);
-        if (yn === 'yes') {
-          setAwaitingEnrollmentResponse(false);
-          setEnrollmentCancelled(false);
-          setTimeout(() => setEnrollmentFormCount(c => c + 1), 300);
-        } else if (yn === 'no') {
-          setAwaitingEnrollmentResponse(false);
-          const noText = state.language === 'ta'
-            ? 'சரி! வேற ஏதாவது கேள்விகள் இருந்தால் கேளுங்க.'
-            : 'No problem! Feel free to browse. Let me know if you change your mind.';
-          setTimeout(() => {
-            dispatch({
-              type: 'ADD_BOT_MESSAGE', payload: {
-                id: (Date.now() + 1).toString(),
-                sender: 'bot',
-                text: noText,
-                timestamp: Date.now(),
-                type: 'normal',
-              }
-            });
-          }, 300);
-        } else {
-          // Not a clear yes/no — re-ask
-          const reAskText = state.language === 'ta'
-            ? 'நம்ம team-கிட்ட பேசணுமா? "Yes" அல்லது "No" சொல்லுங்க.'
-            : 'Would you like to speak with our team? Please reply "Yes" or "No".';
-          setTimeout(() => {
-            dispatch({
-              type: 'ADD_BOT_MESSAGE', payload: {
-                id: (Date.now() + 1).toString(),
-                sender: 'bot',
-                text: reAskText,
-                timestamp: Date.now(),
-                type: 'normal',
-              }
-            });
-          }, 300);
-        }
-      } else {
-        // First time hitting the gate — ask yes/no question
-        setAwaitingEnrollmentResponse(true);
-        const askText = state.language === 'ta'
-          ? 'நம்ம team-கிட்ட நேரடியா பேசணும்னு நினைக்கிறீங்களா?'
-          : 'Would you like to speak directly with our team?';
+      if (!enrollmentCancelled) {
+        // First time (or after form reset): play enrollment prompt audio + show form
+        const promptText = state.language === 'ta'
+          ? 'உங்களுக்கு மேலும் உதவ எங்கள் team ஆர்வமாக இருக்கிறது. கீழே உள்ள form-ஐ fill பண்ணுங்க!'
+          : 'Our team would love to help you further. Please fill in the form below!';
         const audioKey = state.language === 'ta' ? 'enrollment_prompt_ta' : 'enrollment_prompt_en';
         setTimeout(() => {
           dispatch({
             type: 'ADD_BOT_MESSAGE', payload: {
               id: (Date.now() + 1).toString(),
               sender: 'bot',
-              text: askText,
-              audioUrl: getStaticAudioUrl(audioKey) || '/tts/generate',
+              text: promptText,
+              audioUrl: getStaticAudioUrl(audioKey) || 'audio_enabled',
               timestamp: Date.now(),
               type: 'normal',
             }
           });
+          setEnrollmentFormCount(c => c + 1);
         }, 300);
+      } else {
+        // User previously cancelled — re-open form silently (no repeated audio)
+        setEnrollmentCancelled(false);
+        setTimeout(() => setEnrollmentFormCount(c => c + 1), 300);
       }
       return;
     }
@@ -538,7 +483,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [state.language, state.questionCount, enrollmentSubmitted, enrollmentCancelled, awaitingEnrollmentResponse]);
+  }, [state.language, state.questionCount, enrollmentSubmitted, enrollmentCancelled]);
 
   const setLanguage = useCallback((lang: 'en' | 'ta') => {
     dispatch({ type: 'SET_LANGUAGE', payload: lang });
@@ -549,7 +494,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     dispatch({ type: 'CLEAR_MESSAGES' });
     setEnrollmentSubmitted(false);
     setEnrollmentCancelled(false);
-    setAwaitingEnrollmentResponse(false);
     clearEnrollmentStorage();
     localStorage.removeItem('conversation_messages');
     dispatchWelcome();
