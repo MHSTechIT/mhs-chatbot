@@ -21,7 +21,34 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
   const [error, setError] = useState<string | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
-  const isValid = formData.name.trim() && formData.phone.trim() && formData.age.trim() && formData.location.trim();
+  // Validation rules
+  const nameValid = /^[a-zA-Z\u0B80-\u0BFF\s]{2,50}$/.test(formData.name.trim());
+  const phoneValid = /^[6-9]\d{9}$/.test(formData.phone.trim());
+  const ageNum = parseInt(formData.age);
+  const ageValid = /^\d+$/.test(formData.age.trim()) && ageNum >= 1 && ageNum <= 120;
+  const locationValid = formData.location.trim().length >= 2 && formData.location.trim().length <= 100;
+  const isValid = nameValid && phoneValid && ageValid && locationValid;
+
+  const getFieldError = (field: string): string => {
+    if (!submitAttempted) return '';
+    if (field === 'name') {
+      if (!formData.name.trim()) return language === 'ta' ? 'பெயர் தேவை' : 'Name is required';
+      if (!nameValid) return language === 'ta' ? 'சரியான பெயர் உள்ளிடவும் (2-50 எழுத்துகள்)' : 'Enter a valid name (2-50 characters, letters only)';
+    }
+    if (field === 'phone') {
+      if (!formData.phone.trim()) return language === 'ta' ? 'தொலைபேசி எண் தேவை' : 'Phone number is required';
+      if (!phoneValid) return language === 'ta' ? '10 இலக்க இந்திய மொபைல் எண் உள்ளிடவும்' : 'Enter a valid 10-digit Indian mobile number';
+    }
+    if (field === 'age') {
+      if (!formData.age.trim()) return language === 'ta' ? 'வயது தேவை' : 'Age is required';
+      if (!ageValid) return language === 'ta' ? 'வயது 1-120 இடையே இருக்கணும்' : 'Age must be between 1 and 120';
+    }
+    if (field === 'location') {
+      if (!formData.location.trim()) return language === 'ta' ? 'இடம் தேவை' : 'Location is required';
+      if (!locationValid) return language === 'ta' ? 'சரியான இடம் உள்ளிடவும்' : 'Enter a valid location (2-100 characters)';
+    }
+    return '';
+  };
 
   const handleCancel = () => {
     setError(null);
@@ -43,6 +70,11 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    // Enforce input-level limits to block obviously wrong values early
+    if (name === 'phone' && !/^\d*$/.test(value)) return; // digits only
+    if (name === 'age' && !/^\d*$/.test(value)) return;   // digits only
+    if (name === 'name' && value.length > 50) return;
+    if (name === 'location' && value.length > 100) return;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -171,7 +203,7 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name Field */}
               <div>
-                <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-theme-muted' : 'text-gray-600'}`}>
+                <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-theme-muted' : 'text-gray-600'}`}>
                   {currentLabels.name}
                 </label>
                 <input
@@ -181,13 +213,14 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
                   onChange={handleChange}
                   placeholder={language === 'en' ? 'Enter your name' : 'உங்கள் பெயரை உள்ளிடவும்'}
                   className={inputClass}
-                  required
+                  maxLength={50}
                 />
+                {getFieldError('name') && <p className="text-red-500 text-xs mt-1">{getFieldError('name')}</p>}
               </div>
 
               {/* Phone Field */}
               <div>
-                <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-theme-muted' : 'text-gray-600'}`}>
+                <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-theme-muted' : 'text-gray-600'}`}>
                   {currentLabels.phone}
                 </label>
                 <input
@@ -195,33 +228,35 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder={language === 'en' ? 'Enter your phone number' : 'உங்கள் தொலைபேசி எண்ணை உள்ளிடவும்'}
+                  placeholder={language === 'en' ? 'e.g. 9876543210' : 'எ.கா. 9876543210'}
                   className={inputClass}
-                  required
+                  maxLength={10}
+                  inputMode="numeric"
                 />
+                {getFieldError('phone') && <p className="text-red-500 text-xs mt-1">{getFieldError('phone')}</p>}
               </div>
 
               {/* Age Field */}
               <div>
-                <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-theme-muted' : 'text-gray-600'}`}>
+                <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-theme-muted' : 'text-gray-600'}`}>
                   {currentLabels.age}
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   name="age"
                   value={formData.age}
                   onChange={handleChange}
-                  placeholder={language === 'en' ? 'Enter your age' : 'உங்கள் வயதை உள்ளிடவும்'}
+                  placeholder={language === 'en' ? 'e.g. 35' : 'எ.கா. 35'}
                   className={inputClass}
-                  required
-                  min="1"
-                  max="150"
+                  maxLength={3}
+                  inputMode="numeric"
                 />
+                {getFieldError('age') && <p className="text-red-500 text-xs mt-1">{getFieldError('age')}</p>}
               </div>
 
               {/* Location Field */}
               <div>
-                <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-theme-muted' : 'text-gray-600'}`}>
+                <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-theme-muted' : 'text-gray-600'}`}>
                   {currentLabels.location}
                 </label>
                 <input
@@ -231,8 +266,9 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
                   onChange={handleChange}
                   placeholder={language === 'en' ? 'Enter your city/location' : 'உங்கள் நகரம்/இடத்தை உள்ளிடவும்'}
                   className={inputClass}
-                  required
+                  maxLength={100}
                 />
+                {getFieldError('location') && <p className="text-red-500 text-xs mt-1">{getFieldError('location')}</p>}
               </div>
 
               {/* Blood Sugar Level Field (Optional) */}
@@ -250,13 +286,9 @@ export const EnrollmentForm: React.FC<EnrollmentFormProps> = ({ onClose, onSubmi
                 />
               </div>
 
-              {/* Error Message */}
+              {/* API/submission error */}
               {error && (
                 <p className="text-red-600 text-sm bg-red-50 p-2 rounded border border-red-200">{error}</p>
-              )}
-
-              {submitAttempted && !isValid && !error && (
-                <p className="text-red-600 text-sm">{currentLabels.fillRequired}</p>
               )}
 
               {/* Buttons */}
