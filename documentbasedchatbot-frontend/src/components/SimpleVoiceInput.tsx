@@ -14,6 +14,8 @@ interface SimpleVoiceInputProps {
     isDark?: boolean;
 }
 
+const BACKEND_URL = ((import.meta as any).env?.VITE_API_URL || 'http://localhost:8000').trim();
+
 export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
     onTranscription,
     disabled,
@@ -25,74 +27,71 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
     isDark = true
 }) => {
     const [isListening, setIsListening] = useState(false);
+    const [isTranscribing, setIsTranscribing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [transcript, setTranscript] = useState('');
     const [language, setLanguage] = useState<'en' | 'ta'>(parentLanguage || 'ta');
     useEffect(() => {
         if (parentLanguage) setLanguage(parentLanguage);
     }, [parentLanguage]);
+
+    // iOS Safari does not support Tamil speech recognition via Web Speech API.
+    // On iOS + Tamil we use MediaRecorder → backend Gemini transcription instead.
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const useMediaRecorder = isIOS && language === 'ta';
+
+    // ── Web Speech API refs ───────────────────────────────────────────────────
     const recognitionRef = useRef<any>(null);
     const accumulatedTranscriptRef = useRef('');
     const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const shouldListenRef = useRef(false);
-
     const SILENCE_DELAY_MS = 2000;
 
-    useEffect(() => {
-        // Initialize Web Speech API
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    // ── MediaRecorder refs (iOS Tamil) ────────────────────────────────────────
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
 
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    // ── Web Speech API initialisation ─────────────────────────────────────────
+    useEffect(() => {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
             setError(isIOS
                 ? "Voice input not supported on this browser. Please type your question."
                 : "Speech recognition not supported — use Chrome or Edge.");
-            console.error('[SimpleVoiceInput] Speech Recognition not available');
             return;
         }
 
+        // iOS Tamil uses MediaRecorder path — no need to init Web Speech API
+        if (useMediaRecorder) return;
+
         const recognition = new SpeechRecognition();
-        recognition.continuous = false;  // Listen for single utterance
-        recognition.interimResults = true;  // Show results as user speaks
-        recognition.lang = language === 'ta' ? 'ta-IN' : 'en-IN';  // Support both Tamil and English
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = language === 'ta' ? 'ta-IN' : 'en-IN';
         recognitionRef.current = recognition;
 
         recognition.onstart = () => {
-            console.log('[SimpleVoiceInput] Started listening');
             setIsListening(true);
             setError(null);
             setTranscript('');
             accumulatedTranscriptRef.current = '';
-            if (silenceTimeoutRef.current) {
-                clearTimeout(silenceTimeoutRef.current);
-                silenceTimeoutRef.current = null;
-            }
+            if (silenceTimeoutRef.current) { clearTimeout(silenceTimeoutRef.current); silenceTimeoutRef.current = null; }
         };
 
         recognition.onresult = (event: any) => {
             let interimTranscript = '';
-
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const speechResult = event.results[i][0].transcript;
-
-                if (event.results[i].isFinal) {
-                    accumulatedTranscriptRef.current += speechResult;
-                } else {
-                    interimTranscript += speechResult;
-                }
+                if (event.results[i].isFinal) { accumulatedTranscriptRef.current += speechResult; }
+                else { interimTranscript += speechResult; }
             }
-
             const displayText = accumulatedTranscriptRef.current + interimTranscript;
             setTranscript(displayText);
-            console.log('[SimpleVoiceInput] Transcript:', displayText);
 
-            // Start silence timer after detecting speech
             if (accumulatedTranscriptRef.current) {
-                console.log('[SimpleVoiceInput] Speech detected, setting silence timeout');
                 if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
                 silenceTimeoutRef.current = setTimeout(() => {
-                    console.log('[SimpleVoiceInput] Silence detected, stopping');
                     try { recognition.stop(); } catch (_) {}
                     silenceTimeoutRef.current = null;
                 }, SILENCE_DELAY_MS);
@@ -101,23 +100,12 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
 
         recognition.onerror = (event: any) => {
             console.error('[SimpleVoiceInput] Error:', event.error);
-
-            // no-speech + aborted: iOS sends 'aborted' where Chrome sends 'no-speech' — handle both silently
             if (event.error === 'no-speech' || event.error === 'aborted') {
-                console.log('[SimpleVoiceInput] No speech / aborted, restarting...');
-                if (shouldListenRef.current) {
-                    try { recognition.start(); } catch (_) {}
-                }
+                if (shouldListenRef.current) { try { recognition.start(); } catch (_) {} }
                 return;
             }
-
-            // service-not-allowed: iOS Safari blocks unsupported languages (e.g. ta-IN)
             if (event.error === 'service-not-allowed') {
-                setError(
-                    isIOS && language === 'ta'
-                        ? "iOS does not support Tamil voice input — please type your question."
-                        : "Voice recognition service unavailable — please type your question."
-                );
+                setError("Voice recognition service unavailable — please type your question.");
             } else if (event.error === 'not-allowed') {
                 setError("Microphone permission denied");
             } else if (event.error === 'audio-capture') {
@@ -130,58 +118,121 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
         };
 
         recognition.onend = () => {
-            console.log('[SimpleVoiceInput] Recognition ended');
             const finalText = accumulatedTranscriptRef.current.trim();
-
             if (finalText) {
-                console.log('[SimpleVoiceInput] Sending transcript:', finalText);
                 setIsListening(false);
                 shouldListenRef.current = false;
                 onTranscription(finalText);
                 accumulatedTranscriptRef.current = '';
                 setTranscript('');
             } else if (shouldListenRef.current) {
-                console.log('[SimpleVoiceInput] No text collected, restarting...');
                 try { recognition.start(); } catch (_) {}
             } else {
-                console.log('[SimpleVoiceInput] Stopped listening');
                 setIsListening(false);
                 accumulatedTranscriptRef.current = '';
                 setTranscript('');
             }
-
-            if (silenceTimeoutRef.current) {
-                clearTimeout(silenceTimeoutRef.current);
-                silenceTimeoutRef.current = null;
-            }
+            if (silenceTimeoutRef.current) { clearTimeout(silenceTimeoutRef.current); silenceTimeoutRef.current = null; }
         };
 
         return () => {
             shouldListenRef.current = false;
-            if (silenceTimeoutRef.current) {
-                clearTimeout(silenceTimeoutRef.current);
-                silenceTimeoutRef.current = null;
-            }
+            if (silenceTimeoutRef.current) { clearTimeout(silenceTimeoutRef.current); silenceTimeoutRef.current = null; }
             try { recognition.abort(); } catch (_) {}
         };
-    }, [onTranscription, language]);
+    }, [onTranscription, language, useMediaRecorder]);
 
+    // ── MediaRecorder helpers (iOS Tamil) ─────────────────────────────────────
+    const startMediaRecording = useCallback(async () => {
+        try {
+            if (onRecordingStart) onRecordingStart();
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // iOS Safari supports audio/mp4; Android/Chrome supports audio/webm
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                ? 'audio/webm;codecs=opus'
+                : MediaRecorder.isTypeSupported('audio/mp4')
+                    ? 'audio/mp4'
+                    : 'audio/webm';
+
+            const recorder = new MediaRecorder(stream, { mimeType });
+            audioChunksRef.current = [];
+
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) audioChunksRef.current.push(e.data);
+            };
+
+            recorder.onstop = async () => {
+                stream.getTracks().forEach(t => t.stop());
+                const blob = new Blob(audioChunksRef.current, { type: mimeType });
+                if (blob.size < 500) { setIsListening(false); return; }
+
+                setIsTranscribing(true);
+                setIsListening(false);
+                try {
+                    // Convert blob → base64
+                    const arrayBuffer = await blob.arrayBuffer();
+                    const bytes = new Uint8Array(arrayBuffer);
+                    let binary = '';
+                    bytes.forEach(b => { binary += String.fromCharCode(b); });
+                    const base64 = btoa(binary);
+
+                    const resp = await fetch(`${BACKEND_URL}/transcribe`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ audio: base64, mime_type: mimeType }),
+                    });
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const data = await resp.json();
+                    if (data.text && data.text.trim()) {
+                        onTranscription(data.text.trim());
+                    } else {
+                        setError("Couldn't hear anything — please try again.");
+                    }
+                } catch {
+                    setError("Transcription failed. Please try again.");
+                } finally {
+                    setIsTranscribing(false);
+                }
+            };
+
+            recorder.start();
+            mediaRecorderRef.current = recorder;
+            setIsListening(true);
+            setError(null);
+        } catch (err: any) {
+            if (err.name === 'NotAllowedError') {
+                setError("Microphone permission denied");
+            } else {
+                setError("Could not start recording");
+            }
+        }
+    }, [onRecordingStart, onTranscription]);
+
+    const stopMediaRecording = useCallback(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            mediaRecorderRef.current.stop();
+        }
+    }, []);
+
+    // ── Unified toggle ────────────────────────────────────────────────────────
     const toggleListening = useCallback(() => {
-        if (!recognitionRef.current) return;
         if (disabled) return;
 
+        if (useMediaRecorder) {
+            if (isListening) { stopMediaRecording(); }
+            else { startMediaRecording(); }
+            return;
+        }
+
+        if (!recognitionRef.current) return;
         try {
             if (isListening) {
-                console.log('[SimpleVoiceInput] Stopping...');
                 shouldListenRef.current = false;
                 recognitionRef.current.stop();
                 setIsListening(false);
             } else {
-                console.log('[SimpleVoiceInput] Starting...');
-                // Stop any currently playing audio
-                if (onRecordingStart) {
-                    onRecordingStart();
-                }
+                if (onRecordingStart) onRecordingStart();
                 shouldListenRef.current = true;
                 setTranscript('');
                 setError(null);
@@ -191,8 +242,9 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
         } catch (err) {
             console.error('[SimpleVoiceInput] Toggle error:', err);
         }
-    }, [isListening, disabled, onRecordingStart]);
+    }, [isListening, disabled, onRecordingStart, useMediaRecorder, startMediaRecording, stopMediaRecording]);
 
+    // ── Styles ────────────────────────────────────────────────────────────────
     const isOverlay = variant === 'overlay';
     const langBtnBase = isOverlay
         ? 'px-4 py-2 rounded-xl text-sm font-medium transition-all'
@@ -210,13 +262,12 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
         : 'bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse';
     const micBtnIdle = isOverlay
         ? 'bg-white/10 text-white border-2 border-white/30 hover:bg-white/20 shadow-[0_0_25px_rgba(168,85,247,0.3)] hover:shadow-[0_0_35px_rgba(168,85,247,0.4)] backdrop-blur-sm'
-        : navigateToAvatarOnMicClick
-            ? isDark
-                ? 'bg-theme-card text-theme-muted border border-theme-cardBorder hover:bg-theme-cardBorder/50'
-                : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100 shadow-sm'
-            : isDark
-                ? 'bg-theme-card text-theme-muted border border-theme-cardBorder hover:bg-theme-cardBorder/50'
-                : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100 shadow-sm';
+        : isDark
+            ? 'bg-theme-card text-theme-muted border border-theme-cardBorder hover:bg-theme-cardBorder/50'
+            : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100 shadow-sm';
+    const micBtnTranscribing = isOverlay
+        ? 'bg-theme-accent/20 text-theme-accent border-2 border-theme-accent/40 animate-pulse backdrop-blur-sm'
+        : 'bg-theme-accent/20 text-theme-accent border border-theme-accent/50 animate-pulse';
 
     return (
         <div className="flex flex-col items-center gap-3">
@@ -225,46 +276,41 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
                 <div className="flex gap-2 text-sm">
                     <button
                         type="button"
-                        onClick={() => {
-                            setLanguage('en');
-                            onLanguageChange?.('en');
-                        }}
-                        disabled={disabled || isListening}
-                        className={`${langBtnBase} ${
-                            language === 'en' ? langBtnActive : langBtnInactive
-                        } ${disabled || isListening ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                    >
-                        EN
-                    </button>
+                        onClick={() => { setLanguage('en'); onLanguageChange?.('en'); }}
+                        disabled={disabled || isListening || isTranscribing}
+                        className={`${langBtnBase} ${language === 'en' ? langBtnActive : langBtnInactive} ${
+                            disabled || isListening || isTranscribing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                        }`}
+                    >EN</button>
                     <button
                         type="button"
-                        onClick={() => {
-                            setLanguage('ta');
-                            onLanguageChange?.('ta');
-                        }}
-                        disabled={disabled || isListening}
-                        className={`${langBtnBase} ${
-                            language === 'ta' ? langBtnActive : langBtnInactive
-                        } ${disabled || isListening ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                    >
-                        TA
-                    </button>
+                        onClick={() => { setLanguage('ta'); onLanguageChange?.('ta'); }}
+                        disabled={disabled || isListening || isTranscribing}
+                        className={`${langBtnBase} ${language === 'ta' ? langBtnActive : langBtnInactive} ${
+                            disabled || isListening || isTranscribing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                        }`}
+                    >TA</button>
                 </div>
             )}
 
-            {/* Microphone Button - navigates to avatar or toggles recording */}
+            {/* Microphone Button */}
             <button
                 type="button"
-                disabled={disabled}
+                disabled={disabled || isTranscribing}
                 onClick={navigateToAvatarOnMicClick ?? toggleListening}
                 className={`rounded-full transition-all duration-300 flex items-center justify-center select-none
                     ${isOverlay ? 'p-5' : 'p-4'}
-                    ${isListening ? micBtnListening : micBtnIdle}
-                    ${disabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
+                    ${isTranscribing ? micBtnTranscribing : isListening ? micBtnListening : micBtnIdle}
+                    ${disabled || isTranscribing ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
                 `}
-                title={navigateToAvatarOnMicClick ? "Go to Avatar Mode" : (isListening ? "Stop Listening" : "Start Voice Input")}
+                title={navigateToAvatarOnMicClick ? "Go to Avatar Mode" : isTranscribing ? "Transcribing..." : isListening ? "Tap to send" : "Start Voice Input"}
             >
-                {isListening ? (
+                {isTranscribing ? (
+                    <svg className={`animate-spin ${isOverlay ? 'w-7 h-7' : 'w-6 h-6'}`} fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                ) : isListening ? (
                     <svg className={`animate-bounce ${isOverlay ? 'w-7 h-7' : 'w-6 h-6'}`} fill="currentColor" viewBox="0 0 24 24">
                         <circle cx="12" cy="8" r="1.5" />
                         <circle cx="12" cy="16" r="1.5" />
@@ -280,20 +326,19 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
 
             {/* Status Messages */}
             {error && (
-                <div className="text-xs text-red-400 text-center px-2">
-                    {error}
-                </div>
+                <div className="text-xs text-red-400 text-center px-2">{error}</div>
             )}
-
             {transcript && isListening && (
                 <div className="text-xs text-theme-muted text-center px-2 bg-theme-card/50 rounded p-1 max-w-xs">
                     <span className="text-white">{transcript}</span>
                 </div>
             )}
-
-            {isListening && !error && (
+            {isTranscribing && (
+                <div className="text-xs text-theme-accent text-center">Transcribing...</div>
+            )}
+            {isListening && !isTranscribing && !error && (
                 <div className="text-xs text-theme-muted text-center">
-                    Listening...
+                    {useMediaRecorder ? 'Recording — tap to send' : 'Listening...'}
                 </div>
             )}
         </div>
