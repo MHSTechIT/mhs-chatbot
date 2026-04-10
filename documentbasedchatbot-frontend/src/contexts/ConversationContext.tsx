@@ -481,9 +481,25 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
           setEnrollmentFormCount(c => c + 1);
         }, 300);
       } else {
-        // User previously cancelled — re-open form silently (no repeated audio)
+        // User previously cancelled — reset and show form WITH audio again
+        const promptText = state.language === 'ta'
+          ? 'உங்களுக்கு மேலும் உதவ எங்கள் team ஆர்வமாக இருக்கிறது. கீழே உள்ள form-ஐ fill பண்ணுங்க!'
+          : 'Our team would love to help you further. Please fill in the form below!';
+        const audioKey = state.language === 'ta' ? 'enrollment_prompt_ta' : 'enrollment_prompt_en';
         setEnrollmentCancelled(false);
-        setTimeout(() => setEnrollmentFormCount(c => c + 1), 300);
+        setTimeout(() => {
+          dispatch({
+            type: 'ADD_BOT_MESSAGE', payload: {
+              id: (Date.now() + 1).toString(),
+              sender: 'bot',
+              text: promptText,
+              audioUrl: getStaticAudioUrl(audioKey) || 'audio_enabled',
+              timestamp: Date.now(),
+              type: 'normal',
+            }
+          });
+          setEnrollmentFormCount(c => c + 1);
+        }, 300);
       }
       return;
     }

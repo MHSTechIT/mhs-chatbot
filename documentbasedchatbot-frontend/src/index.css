@@ -3,8 +3,14 @@
 @import 'tailwindcss/utilities';
 
 @layer base {
+  /* iOS Safari: fill-available fixes the 100vh > visible viewport bug */
+  html {
+    height: -webkit-fill-available;
+  }
   body {
     @apply bg-theme-base text-white font-sans antialiased;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
 }
 

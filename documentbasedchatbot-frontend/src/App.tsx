@@ -10,9 +10,12 @@ const AppContent: React.FC = () => {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`min-h-screen h-screen flex flex-col selection:bg-theme-accent/30 selection:text-white font-sans overflow-hidden transition-colors ${
-      isDark ? 'bg-theme-base text-white' : 'bg-white text-gray-900'
-    }`}>
+    <div
+      className={`flex flex-col selection:bg-theme-accent/30 selection:text-white font-sans overflow-hidden transition-colors ${
+        isDark ? 'bg-theme-base text-white' : 'bg-white text-gray-900'
+      }`}
+      style={{ height: '100dvh', minHeight: '-webkit-fill-available' }}
+    >
         {/* Page Content */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {currentPage === 'chat' ? (
