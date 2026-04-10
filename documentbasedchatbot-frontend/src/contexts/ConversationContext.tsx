@@ -153,6 +153,8 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   // ─── Shared Audio — single Audio element that survives page navigation ───────
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
+  // iOS: stores the blob/data URL of audio that was blocked before user interaction
+  const iosBlockedSrcRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
     audioRef.current = new Audio();
@@ -160,8 +162,11 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   }, []);
 
   // iOS Safari blocks audio.play() unless triggered by a direct user gesture.
-  // On first touch/click we play a silent 44-byte WAV to "unlock" the audio element
-  // so subsequent programmatic plays (welcome, bot responses) work normally.
+  // On first touch/click:
+  //   1. Play a silent 44-byte WAV to "unlock" the audio element.
+  //   2. If audio was blocked before this gesture (stored in iosBlockedSrcRef),
+  //      restore that src and replay it immediately — so the welcome / first bot
+  //      response plays as soon as the user first taps anything on the page.
   React.useEffect(() => {
     const SILENT_WAV = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
     let unlocked = false;
@@ -169,9 +174,27 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       if (unlocked || !audioRef.current) return;
       unlocked = true;
       const audio = audioRef.current;
-      const prev = audio.src;
+      const pendingSrc = iosBlockedSrcRef.current;
+      iosBlockedSrcRef.current = null;
+
       audio.src = SILENT_WAV;
-      audio.play().then(() => { audio.pause(); audio.src = prev; }).catch(() => { audio.src = prev; });
+      audio.play().then(() => {
+        audio.pause();
+        // Replay any audio that was blocked before the first user gesture
+        if (pendingSrc) {
+          audio.src = pendingSrc;
+          audio.onended = () => {
+            setIsSpeaking(false);
+            if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc);
+          };
+          audio.onerror = () => {
+            setIsSpeaking(false);
+            if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc);
+          };
+          setIsSpeaking(true);
+          audio.play().catch(() => setIsSpeaking(false));
+        }
+      }).catch(() => {});
       document.removeEventListener('touchstart', unlock, true);
       document.removeEventListener('click', unlock, true);
     };
@@ -227,7 +250,16 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
         audio.src = srcUrl;
         audio.onended = () => { setIsSpeaking(false); if (srcUrl.startsWith('blob:')) URL.revokeObjectURL(srcUrl); };
         audio.onerror = () => { setIsSpeaking(false); if (srcUrl.startsWith('blob:')) URL.revokeObjectURL(srcUrl); };
-        await audio.play().catch(() => setIsSpeaking(false));
+        await audio.play().catch((err) => {
+          // iOS NotAllowedError: audio blocked — queue for replay on first user gesture
+          if (err?.name === 'NotAllowedError') {
+            iosBlockedSrcRef.current = srcUrl;
+            // Keep isSpeaking true so the "Speaking" indicator shows as a tap hint on iOS
+          } else {
+            setIsSpeaking(false);
+            if (srcUrl.startsWith('blob:')) URL.revokeObjectURL(srcUrl);
+          }
+        });
       } catch { setIsSpeaking(false); }
       return;
     }
@@ -251,7 +283,15 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       audio.src = blobUrl;
       audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
       audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
-      await audio.play().catch(() => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); });
+      await audio.play().catch((err) => {
+        // iOS NotAllowedError: queue for replay on first user gesture
+        if (err?.name === 'NotAllowedError') {
+          iosBlockedSrcRef.current = blobUrl;
+        } else {
+          setIsSpeaking(false);
+          URL.revokeObjectURL(blobUrl);
+        }
+      });
     } catch (err) {
       console.error('Error generating/playing audio:', err);
       setIsSpeaking(false);
