@@ -159,6 +159,30 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     return () => { audioRef.current?.pause(); };
   }, []);
 
+  // iOS Safari blocks audio.play() unless triggered by a direct user gesture.
+  // On first touch/click we play a silent 44-byte WAV to "unlock" the audio element
+  // so subsequent programmatic plays (welcome, bot responses) work normally.
+  React.useEffect(() => {
+    const SILENT_WAV = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+    let unlocked = false;
+    const unlock = () => {
+      if (unlocked || !audioRef.current) return;
+      unlocked = true;
+      const audio = audioRef.current;
+      const prev = audio.src;
+      audio.src = SILENT_WAV;
+      audio.play().then(() => { audio.pause(); audio.src = prev; }).catch(() => { audio.src = prev; });
+      document.removeEventListener('touchstart', unlock, true);
+      document.removeEventListener('click', unlock, true);
+    };
+    document.addEventListener('touchstart', unlock, { capture: true, passive: true });
+    document.addEventListener('click', unlock, { capture: true, passive: true });
+    return () => {
+      document.removeEventListener('touchstart', unlock, true);
+      document.removeEventListener('click', unlock, true);
+    };
+  }, []);
+
   const stopAudio = React.useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();

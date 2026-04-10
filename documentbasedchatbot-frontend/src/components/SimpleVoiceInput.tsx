@@ -42,8 +42,12 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
         // Initialize Web Speech API
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
         if (!SpeechRecognition) {
-            setError("Speech recognition not supported - use Chrome/Edge");
+            setError(isIOS
+                ? "Voice input not supported on this browser. Please type your question."
+                : "Speech recognition not supported — use Chrome or Edge.");
             console.error('[SimpleVoiceInput] Speech Recognition not available');
             return;
         }
@@ -98,17 +102,23 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
         recognition.onerror = (event: any) => {
             console.error('[SimpleVoiceInput] Error:', event.error);
 
-            // On no-speech error, silently restart if user is still holding the button
-            if (event.error === 'no-speech') {
-                console.log('[SimpleVoiceInput] No speech detected, restarting...');
+            // no-speech + aborted: iOS sends 'aborted' where Chrome sends 'no-speech' — handle both silently
+            if (event.error === 'no-speech' || event.error === 'aborted') {
+                console.log('[SimpleVoiceInput] No speech / aborted, restarting...');
                 if (shouldListenRef.current) {
                     try { recognition.start(); } catch (_) {}
                 }
                 return;
             }
 
-            // Handle other errors
-            if (event.error === 'not-allowed') {
+            // service-not-allowed: iOS Safari blocks unsupported languages (e.g. ta-IN)
+            if (event.error === 'service-not-allowed') {
+                setError(
+                    isIOS && language === 'ta'
+                        ? "iOS does not support Tamil voice input — please type your question."
+                        : "Voice recognition service unavailable — please type your question."
+                );
+            } else if (event.error === 'not-allowed') {
                 setError("Microphone permission denied");
             } else if (event.error === 'audio-capture') {
                 setError("No microphone found");
