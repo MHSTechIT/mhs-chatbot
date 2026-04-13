@@ -35,10 +35,11 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
         if (parentLanguage) setLanguage(parentLanguage);
     }, [parentLanguage]);
 
-    // iOS Safari does not support Tamil speech recognition via Web Speech API.
-    // On iOS + Tamil we use MediaRecorder → backend Gemini transcription instead.
+    // iOS Safari's Web Speech API (webkitSpeechRecognition) is unreliable for both
+    // Tamil and English — it silently fails, times out, or returns empty results.
+    // On all iOS devices, use MediaRecorder → backend Gemini transcription instead.
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const useMediaRecorder = isIOS && language === 'ta';
+    const useMediaRecorder = isIOS;
 
     // ── Web Speech API refs ───────────────────────────────────────────────────
     const recognitionRef = useRef<any>(null);
@@ -177,11 +178,15 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
                     bytes.forEach(b => { binary += String.fromCharCode(b); });
                     const base64 = btoa(binary);
 
+                    const transcribeController = new AbortController();
+                    const transcribeTimeout = setTimeout(() => transcribeController.abort(), 30000);
                     const resp = await fetch(`${BACKEND_URL}/transcribe`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ audio: base64, mime_type: mimeType }),
+                        signal: transcribeController.signal,
                     });
+                    clearTimeout(transcribeTimeout);
                     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                     const data = await resp.json();
                     if (data.text && data.text.trim()) {

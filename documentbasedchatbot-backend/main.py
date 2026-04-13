@@ -98,10 +98,12 @@ app = FastAPI(
 if RateLimitMiddleware:
     app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
 
-# CORS: allow localhost (dev) and *.vercel.app (production)
+# CORS: allow localhost (dev) and any HTTPS origin (production).
+# iOS Safari sends strict CORS preflight requests — allowing all HTTPS origins
+# prevents 403 blocks when the app is served from custom or Render/Railway domains.
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app)",
+    allow_origin_regex=r"(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -116,9 +118,9 @@ if admin_router:
 
 
 def _cors_headers(origin: Optional[str] = None):
-    """Return CORS headers allowing the given origin if it is a known safe origin."""
+    """Return CORS headers allowing the given origin if it is localhost or any HTTPS origin."""
     import re
-    allowed_pattern = re.compile(r"(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app)")
+    allowed_pattern = re.compile(r"(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*)")
     o = origin if (origin and allowed_pattern.match(origin)) else "http://localhost:5173"
     return {
         "Access-Control-Allow-Origin": o,
