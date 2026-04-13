@@ -270,11 +270,15 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       const payload: any = { text, language: state.language };
       if (voiceSettings) { payload.voice_settings = voiceSettings; payload.emotion_label = emotionLabel; }
 
+      const ttsController = new AbortController();
+      const ttsTimeout = setTimeout(() => ttsController.abort(), 30000);
       const response = await fetch(`${BACKEND_URL}/tts/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        signal: ttsController.signal,
       });
+      clearTimeout(ttsTimeout);
       if (!response.ok) throw new Error(`TTS failed: ${response.statusText}`);
 
       const blobUrl = URL.createObjectURL(await response.blob());
@@ -506,16 +510,24 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     dispatch({ type: 'SET_LOADING', payload: true });
 
+    // iOS Safari: use AbortController to enforce a 45-second timeout.
+    // Without this, fetch hangs indefinitely on slow/unstable iPhone networks.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
+
     try {
       const response = await fetch(`${BACKEND_URL}/ask`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        // Note: do NOT append charset=utf-8 — iOS Safari can reject the non-standard suffix
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question,
           mode,
           language: state.language,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`API error: ${response.statusText}`);
@@ -548,13 +560,21 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       if (result.type !== 'error') {
         dispatch({ type: 'INCREMENT_QUESTION_COUNT' });
       }
-    } catch (error) {
+    } catch (error: any) {
+      clearTimeout(timeoutId);
       console.error('Error asking question:', error);
+      const isTimeout = error?.name === 'AbortError';
+      const isNetworkError = error?.message === 'Failed to fetch' || error?.message === 'Network request failed';
+      const errorText = isTimeout
+        ? 'The request took too long. Please check your internet connection and try again.'
+        : isNetworkError
+          ? 'Cannot reach the server. Please check your internet connection and try again.'
+          : 'Sorry, there was an error processing your question. Please try again.';
       dispatch({
         type: 'ADD_BOT_MESSAGE', payload: {
           id: (Date.now() + 1).toString(),
           sender: 'bot',
-          text: 'Sorry, there was an error processing your question. Please try again.',
+          text: errorText,
           timestamp: Date.now(),
           type: 'error',
           isError: true,
