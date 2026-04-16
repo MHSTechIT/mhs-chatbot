@@ -19,7 +19,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
     enrollmentFormCount, enrollmentSubmitted,
     enrollmentCancelled, setEnrollmentCancelled, handleEnrollmentSubmitted,
     hasPlayed, markPlayed,
-    isSpeaking, hasPendingAudio, stopAudio, playVoice,
+    isSpeaking, stopAudio, playVoice,
   } = useConversation();
 
   // Local form visibility — isolated from context so cancel is always instant
@@ -27,13 +27,6 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
   const lastEnrollmentCountRef = useRef(0);
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
-
-  // Audio permission prompt — shown once per device when autoplay is blocked.
-  // Tapping "Allow" provides the user gesture Chrome needs; unlock() listener plays audio.
-  const [audioAllowed, setAudioAllowed] = useState(() => {
-    try { return localStorage.getItem('audio_allowed') === 'true'; } catch { return false; }
-  });
-  const showAudioPrompt = hasPendingAudio && !isSpeaking && !audioAllowed;
 
   // Auto-play audio for new bot messages (shared audio — continues across page switches)
   useEffect(() => {
@@ -98,39 +91,6 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
           }}
         />
       </div>
-
-      {/* Audio permission prompt — browser blocks autoplay without user gesture.
-          Tapping "Allow" is the gesture that lets unlock() play the welcome audio. */}
-      {showAudioPrompt && (
-        <div
-          className="absolute inset-0 z-50 flex items-center justify-center"
-          style={{ background: 'rgba(10,6,20,0.85)', backdropFilter: 'blur(8px)' }}
-        >
-          <div className="flex flex-col items-center gap-5 mx-6 p-8 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-md max-w-sm w-full">
-            <div className="w-16 h-16 rounded-full bg-theme-accent/20 border-2 border-theme-accent/50 flex items-center justify-center">
-              <svg className="w-8 h-8 text-theme-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M9 9v6l-3-3H3V9h3l3-3z" />
-              </svg>
-            </div>
-            <div className="text-center">
-              <p className="text-white text-lg font-semibold mb-1">Allow Audio</p>
-              <p className="text-white/60 text-sm">This app uses voice to assist you. Allow audio to hear the AI assistant.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setAudioAllowed(true);
-                try { localStorage.setItem('audio_allowed', 'true'); } catch {}
-                // The click event bubbles up to the capture-phase unlock() listener
-                // which detects iosBlockedSrcRef and plays the pending welcome audio.
-              }}
-              className="w-full py-3 rounded-xl bg-theme-accent text-white font-semibold text-base hover:bg-theme-accent/90 active:scale-95 transition-all"
-            >
-              Allow
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Top right controls */}
       <div className="absolute top-0 right-0 z-30 flex items-center gap-2 p-4">

@@ -42,8 +42,6 @@ export interface ConversationContextType {
   markPlayed: (id: string) => void;
   /** Shared audio — persists across page navigation so audio keeps playing when switching pages */
   isSpeaking: boolean;
-  /** true when audio is queued but blocked by autoplay policy — show "Tap to hear" hint */
-  hasPendingAudio: boolean;
   stopAudio: () => void;
   playVoice: (text: string, audioUrl?: string, voiceSettings?: any, emotionLabel?: string) => Promise<void>;
 }
@@ -155,9 +153,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   // ─── Shared Audio — single Audio element that survives page navigation ───────
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
-  // true when audio is queued but waiting for first user gesture (autoplay blocked)
-  const [hasPendingAudio, setHasPendingAudio] = React.useState(false);
-  // iOS: stores the blob/data URL of audio that was blocked before user interaction
+  // Stores the src URL of audio that was blocked by autoplay policy — replayed on first user gesture
   const iosBlockedSrcRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
@@ -185,11 +181,11 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       audio.onended = null;
       audio.onerror = null;
       audio.src = pendingSrc;
-      audio.onplay = () => { setIsSpeaking(true); setHasPendingAudio(false); };
+      audio.onplay = () => setIsSpeaking(true);
       audio.onended = () => { setIsSpeaking(false); if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc); };
-      audio.onerror = () => { setIsSpeaking(false); setHasPendingAudio(false); if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc); };
+      audio.onerror = () => { setIsSpeaking(false); if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc); };
       // Called directly in event handler — user gesture context allows play()
-      audio.play().catch(() => { setIsSpeaking(false); setHasPendingAudio(false); });
+      audio.play().catch(() => setIsSpeaking(false));
 
       document.removeEventListener('touchstart', unlock, true);
       document.removeEventListener('click', unlock, true);
@@ -233,20 +229,26 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     //   • direct audio file paths like /audio/welcome_ta.mp3 (served by Vercel public/)
     const isStaticAudio = audioUrl.startsWith('data:audio') || /\.(mp3|wav|ogg|aac)(\?|$)/i.test(audioUrl);
     if (isStaticAudio) {
-      // Start muted — Chrome and iOS 17+ allow muted autoplay without user gesture.
-      // Unmute immediately in onplay so the user hears it automatically on page open.
       audio.src = audioUrl;
+      audio.muted = false;
       audio.onplay = () => setIsSpeaking(true);
       audio.onended = () => setIsSpeaking(false);
       audio.onerror = () => setIsSpeaking(false);
-      audio.play().catch((err) => {
-        if (err?.name === 'NotAllowedError') {
-          // Autoplay blocked — queue; splash screen prompts user to tap
+
+      // Strategy 1: try normal unmuted play (works when user has already interacted)
+      audio.play().catch(() => {
+        // Strategy 2: muted autoplay then immediately unmute.
+        // Most browsers allow muted autoplay without a user gesture.
+        // Unmuting right after play() starts means the user hears the audio normally.
+        audio.muted = true;
+        audio.play().then(() => {
+          audio.muted = false; // unmute the moment audio starts — sounds normal to the user
+        }).catch(() => {
+          // Strategy 3: still blocked (strict iOS Safari) — queue for first user gesture.
+          // No modal shown; the audio will play automatically on the very next tap/click.
+          audio.muted = false;
           iosBlockedSrcRef.current = audioUrl;
-          setHasPendingAudio(true);
-        } else {
-          setIsSpeaking(false);
-        }
+        });
       });
       return;
     }
@@ -274,14 +276,17 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       audio.onplay = () => setIsSpeaking(true);
       audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
       audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
-      audio.play().catch((err) => {
-        if (err?.name === 'NotAllowedError') {
+      // Strategy 1: normal play
+      audio.play().catch(() => {
+        // Strategy 2: muted play then immediately unmute
+        audio.muted = true;
+        audio.play().then(() => {
+          audio.muted = false;
+        }).catch(() => {
+          // Strategy 3: queue for first user gesture — no modal, plays on next tap
+          audio.muted = false;
           iosBlockedSrcRef.current = blobUrl;
-          setHasPendingAudio(true);
-        } else {
-          setIsSpeaking(false);
-          URL.revokeObjectURL(blobUrl);
-        }
+        });
       });
     } catch (err) {
       console.error('Error generating/playing audio:', err);
@@ -603,7 +608,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     hasPlayed,
     markPlayed,
     isSpeaking,
-    hasPendingAudio,
     stopAudio,
     playVoice,
   };
