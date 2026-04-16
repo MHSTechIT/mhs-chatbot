@@ -28,11 +28,16 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Auto-play audio for new bot messages (shared audio — continues across page switches)
+  // Auto-play audio for new bot answers (skip welcome-type — no startup audio)
   useEffect(() => {
     if (messages.length === 0) return;
     const lastMessage = messages[messages.length - 1];
-    if (lastMessage.sender === 'bot' && !isLoading && !hasPlayed(lastMessage.id)) {
+    if (
+      lastMessage.sender === 'bot' &&
+      lastMessage.type !== 'welcome' &&
+      !isLoading &&
+      !hasPlayed(lastMessage.id)
+    ) {
       markPlayed(lastMessage.id);
       playVoice(
         lastMessage.text,

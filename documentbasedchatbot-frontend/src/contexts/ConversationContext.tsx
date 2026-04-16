@@ -87,7 +87,6 @@ function conversationReducer(state: ConversationState, action: ConversationActio
       return {
         ...state,
         messages: action.payload,
-        // Count only real AI answers (type='normal') — exclude enrollment prompts and errors
         questionCount: action.payload.filter(m => m.sender === 'bot' && m.type === 'normal').length,
       };
     case 'INCREMENT_QUESTION_COUNT':
@@ -100,9 +99,6 @@ function conversationReducer(state: ConversationState, action: ConversationActio
 // Backend URL — trim() removes the trailing newline that Render/Vercel sometimes injects into env vars
 const BACKEND_URL = ((import.meta as any).env?.VITE_API_URL || 'http://localhost:8000').trim();
 
-// The fixed Tamil greeting played at the start of every fresh chat
-const WELCOME_TEXT = 'சக்கரை நோய் பற்றி உங்களுக்கு ஏதாவது கேள்விகள் இருந்தால், தயங்காம கேளுங்கள்.';
-
 // Helper: clear all enrollment-related localStorage keys
 function clearEnrollmentStorage() {
   try {
@@ -110,7 +106,7 @@ function clearEnrollmentStorage() {
   } catch {}
 }
 
-// Load static audio cache from localStorage synchronously (module-level, called once per mount)
+// Load static audio cache from localStorage synchronously (used for enrollment audio)
 function loadStaticAudioCache(): Record<string, string> {
   try {
     const cached = localStorage.getItem('static_audio_cache');
@@ -120,10 +116,8 @@ function loadStaticAudioCache(): Record<string, string> {
 
 export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(conversationReducer, initialState);
-  const [showResumePrompt, setShowResumePrompt] = React.useState(false);
-  const pendingMessagesRef = React.useRef<Message[]>([]);
-  // Cache for pre-recorded static audio (base64 mp3) — avoids ElevenLabs API calls for fixed messages
-  // Loaded from localStorage SYNCHRONOUSLY so welcome audio is available before any effect fires
+
+  // Cache for pre-recorded static audio (base64 mp3) — used for enrollment messages
   const staticAudioRef = React.useRef<Record<string, string>>(loadStaticAudioCache());
 
   // Shared set of already-played message IDs — prevents replay when switching Chat ↔ Avatar pages
@@ -131,29 +125,10 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const hasPlayed = React.useCallback((id: string) => playedMessageIdsRef.current.has(id), []);
   const markPlayed = React.useCallback((id: string) => { playedMessageIdsRef.current.add(id); }, []);
 
-  // Dispatch the Tamil welcome message as the first bot message on fresh/new chats.
-  // Uses the base64 from localStorage cache if warm, else the static MP3 bundled with
-  // the Vercel deploy (/audio/welcome_ta.mp3). Either way: zero ElevenLabs credits.
-  const dispatchWelcome = React.useCallback(() => {
-    const b64 = staticAudioRef.current['welcome_ta'];
-    // b64 cache hit = instant playback; fallback = bundled static MP3 (fetched from Vercel)
-    const audioUrl = b64 ? `data:audio/mp3;base64,${b64}` : '/audio/welcome_ta.mp3';
-    dispatch({
-      type: 'ADD_BOT_MESSAGE', payload: {
-        id: Date.now().toString(),
-        sender: 'bot',
-        text: WELCOME_TEXT,
-        audioUrl,
-        timestamp: Date.now(),
-        type: 'welcome',
-      }
-    });
-  }, []);
-
   // ─── Shared Audio — single Audio element that survives page navigation ───────
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
-  // Stores the src URL of audio that was blocked by autoplay policy — replayed on first user gesture
+  // Stores the src URL of audio blocked by autoplay policy — replayed on first user gesture
   const iosBlockedSrcRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
@@ -161,21 +136,16 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     return () => { audioRef.current?.pause(); };
   }, []);
 
-  // Browsers block audio.play() without a prior user gesture.
-  // When play() is blocked, we store the src in iosBlockedSrcRef and keep
-  // click/touchstart listeners alive. On the next user gesture we directly
-  // call audio.play() — no silent-WAV intermediary that can be interrupted
-  // by other click handlers (e.g. mic button calling stopAudio()).
+  // On first user tap/click, play any audio that was blocked by autoplay policy
   React.useEffect(() => {
     const unlock = () => {
       if (!audioRef.current) return;
       const pendingSrc = iosBlockedSrcRef.current;
-      if (!pendingSrc) return; // Nothing queued yet — keep listener alive
+      if (!pendingSrc) return;
 
       const audio = audioRef.current;
       iosBlockedSrcRef.current = null;
 
-      // Re-set src (audio.src may have changed if another message arrived)
       audio.pause();
       audio.onplay = null;
       audio.onended = null;
@@ -184,7 +154,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       audio.onplay = () => setIsSpeaking(true);
       audio.onended = () => { setIsSpeaking(false); if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc); };
       audio.onerror = () => { setIsSpeaking(false); if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc); };
-      // Called directly in event handler — user gesture context allows play()
       audio.play().catch(() => setIsSpeaking(false));
 
       document.removeEventListener('touchstart', unlock, true);
@@ -216,17 +185,12 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (!audioUrl || !audioRef.current) return;
     const audio = audioRef.current;
 
-    // Always stop and clean up previous audio before starting a new one.
-    // This prevents overlapping playback and stale onended handlers firing on the wrong clip.
     audio.pause();
     audio.currentTime = 0;
     audio.onended = null;
     audio.onerror = null;
     audio.onplay = null;
 
-    // Static pre-recorded audio — play without ElevenLabs:
-    //   • data:audio/... base64 URLs
-    //   • direct audio file paths like /audio/welcome_ta.mp3 (served by Vercel public/)
     const isStaticAudio = audioUrl.startsWith('data:audio') || /\.(mp3|wav|ogg|aac)(\?|$)/i.test(audioUrl);
     if (isStaticAudio) {
       audio.src = audioUrl;
@@ -235,17 +199,14 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       audio.onended = () => setIsSpeaking(false);
       audio.onerror = () => setIsSpeaking(false);
 
-      // Strategy 1: try normal unmuted play (works when user has already interacted)
+      // Strategy 1: normal play (works after any prior user gesture)
       audio.play().catch(() => {
-        // Strategy 2: muted autoplay then immediately unmute.
-        // Most browsers allow muted autoplay without a user gesture.
-        // Unmuting right after play() starts means the user hears the audio normally.
+        // Strategy 2: muted autoplay then immediately unmute
         audio.muted = true;
         audio.play().then(() => {
-          audio.muted = false; // unmute the moment audio starts — sounds normal to the user
+          audio.muted = false;
         }).catch(() => {
-          // Strategy 3: still blocked (strict iOS Safari) — queue for first user gesture.
-          // No modal shown; the audio will play automatically on the very next tap/click.
+          // Strategy 3: queue for first user gesture (iOS Safari strict mode)
           audio.muted = false;
           iosBlockedSrcRef.current = audioUrl;
         });
@@ -270,12 +231,12 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       if (!response.ok) throw new Error(`TTS failed: ${response.statusText}`);
 
       const blobUrl = URL.createObjectURL(await response.blob());
-      // Check if a newer playVoice call started while we were fetching — if so, abort
       if (!audioRef.current || audioRef.current !== audio) return;
       audio.src = blobUrl;
       audio.onplay = () => setIsSpeaking(true);
       audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
       audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
+
       // Strategy 1: normal play
       audio.play().catch(() => {
         // Strategy 2: muted play then immediately unmute
@@ -283,7 +244,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
         audio.play().then(() => {
           audio.muted = false;
         }).catch(() => {
-          // Strategy 3: queue for first user gesture — no modal, plays on next tap
+          // Strategy 3: queue for first user gesture
           audio.muted = false;
           iosBlockedSrcRef.current = blobUrl;
         });
@@ -295,70 +256,35 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   }, [state.language]);
 
   const [enrollmentFormCount, setEnrollmentFormCount] = React.useState(0);
-  // enrollmentSubmitted is NOT loaded from localStorage on init —
-  // it is only restored when we explicitly resume a previous chat session.
   const [enrollmentSubmitted, setEnrollmentSubmitted] = React.useState(false);
-  // enrollmentCancelled prevents the effect from re-showing the form after explicit dismissal
   const [enrollmentCancelled, setEnrollmentCancelled] = React.useState(false);
 
-  // On mount: check for saved messages and decide resume vs fresh start
+  // On mount: restore previous session silently (no welcome message, no prompt)
   React.useEffect(() => {
     const stored = localStorage.getItem('conversation_messages');
     const storedLang = localStorage.getItem('conversation_language') as 'en' | 'ta' | null;
+    const wasEnrolled = localStorage.getItem('enrollment_submitted') === 'true';
 
     if (stored) {
       try {
         const messages: Message[] = JSON.parse(stored);
-        // Count only real conversational messages (exclude welcome banners)
+        // Filter out any old welcome messages — we no longer show them
         const realMessages = messages.filter(m => m.type !== 'welcome');
         if (realMessages.length > 0) {
-          // Has a real previous session — show resume prompt
-          pendingMessagesRef.current = messages;
-          setShowResumePrompt(true);
-        } else {
-          // Only welcome message stored (or empty) — treat as fresh start
-          clearEnrollmentStorage();
-          dispatchWelcome();
+          setEnrollmentSubmitted(wasEnrolled);
+          dispatch({ type: 'LOAD_FROM_STORAGE', payload: realMessages });
         }
       } catch {
         clearEnrollmentStorage();
-        dispatchWelcome();
       }
-    } else {
-      // No stored session at all — fresh start
-      clearEnrollmentStorage();
-      dispatchWelcome();
     }
 
     if (storedLang) {
       dispatch({ type: 'SET_LANGUAGE', payload: storedLang });
     }
-  }, [dispatchWelcome]);
+  }, []);
 
-  // When user chooses "Continue" previous chat — restore enrollment state too
-  const handleResume = React.useCallback(() => {
-    const wasEnrolled = localStorage.getItem('enrollment_submitted') === 'true';
-    setEnrollmentSubmitted(wasEnrolled);
-    const msgs = pendingMessagesRef.current;
-    // Mark any stored welcome messages as played so auto-play doesn't replay them
-    msgs.filter(m => m.type === 'welcome').forEach(m => markPlayed(m.id));
-    dispatch({ type: 'LOAD_FROM_STORAGE', payload: msgs });
-    pendingMessagesRef.current = [];
-    setShowResumePrompt(false);
-  }, [markPlayed]);
-
-  // When user chooses "New Chat" — clear everything including enrollment, then show fresh welcome
-  const handleNewChat = React.useCallback(() => {
-    localStorage.removeItem('conversation_messages');
-    clearEnrollmentStorage();
-    setEnrollmentSubmitted(false);
-    setEnrollmentCancelled(false);
-    pendingMessagesRef.current = [];
-    setShowResumePrompt(false);
-    dispatchWelcome();
-  }, [dispatchWelcome]);
-
-  // Refresh pre-recorded static audio from backend (localStorage already loaded synchronously above)
+  // Refresh pre-recorded static audio from backend (used for enrollment messages)
   React.useEffect(() => {
     fetch(`${BACKEND_URL}/admin/static-audio`)
       .then(r => r.json())
@@ -371,7 +297,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       .catch(() => {});
   }, []);
 
-  // Persist enrollment state whenever it changes
+  // Persist state to localStorage
   React.useEffect(() => {
     try {
       localStorage.setItem('enrollment_submitted', String(enrollmentSubmitted));
@@ -398,9 +324,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     return b64 ? `data:audio/mp3;base64,${b64}` : undefined;
   };
 
-
-  // Called after the enrollment form is successfully submitted.
-  // Dispatches a thank-you bot message that auto-plays the static recorded voice.
+  // Called after enrollment form is successfully submitted
   const handleEnrollmentSubmitted = useCallback(() => {
     setEnrollmentSubmitted(true);
     const thankText = state.language === 'ta'
@@ -413,7 +337,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
           id: Date.now().toString(),
           sender: 'bot',
           text: thankText,
-          audioUrl: getStaticAudioUrl(audioKey) || '/tts/generate',
+          audioUrl: getStaticAudioUrl(audioKey),
           timestamp: Date.now(),
           type: 'normal',
         }
@@ -432,7 +356,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
     dispatch({ type: 'ADD_USER_MESSAGE', payload: userMessage });
 
-    // If user already successfully submitted the form → static "thank you" reply, no AI call
+    // If user already submitted the form → static "thank you" reply
     if (enrollmentSubmitted) {
       const postText = state.language === 'ta'
         ? 'நன்றி! எங்க team விரைவில் உங்களை contact பண்ணி உங்க கேள்விகளுக்கு பதில் சொல்வாங்க!'
@@ -444,7 +368,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
             id: (Date.now() + 1).toString(),
             sender: 'bot',
             text: postText,
-            audioUrl: getStaticAudioUrl(audioKey) || '/tts/generate',
+            audioUrl: getStaticAudioUrl(audioKey),
             timestamp: Date.now(),
             type: 'normal',
           }
@@ -453,64 +377,38 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       return;
     }
 
-    // After 4 free questions — show the enrollment form directly with the prompt audio.
-    // No yes/no gate. First hit plays the enrollment audio; subsequent hits (after cancel)
-    // re-open the form silently so the user is not spammed with repeated audio.
+    // After 4 free questions — show enrollment form
     if (state.questionCount >= MAX_FREE_QUESTIONS) {
-      if (!enrollmentCancelled) {
-        // First time (or after form reset): play enrollment prompt audio + show form
-        const promptText = state.language === 'ta'
-          ? 'உங்களுக்கு மேலும் உதவ எங்கள் team ஆர்வமாக இருக்கிறது. கீழே உள்ள form-ஐ fill பண்ணுங்க!'
-          : 'Our team would love to help you further. Please fill in the form below!';
-        const audioKey = state.language === 'ta' ? 'enrollment_prompt_ta' : 'enrollment_prompt_en';
-        setTimeout(() => {
-          dispatch({
-            type: 'ADD_BOT_MESSAGE', payload: {
-              id: (Date.now() + 1).toString(),
-              sender: 'bot',
-              text: promptText,
-              audioUrl: getStaticAudioUrl(audioKey) || 'audio_enabled',
-              timestamp: Date.now(),
-              type: 'normal',
-            }
-          });
-          setEnrollmentFormCount(c => c + 1);
-        }, 300);
-      } else {
-        // User previously cancelled — reset and show form WITH audio again
-        const promptText = state.language === 'ta'
-          ? 'உங்களுக்கு மேலும் உதவ எங்கள் team ஆர்வமாக இருக்கிறது. கீழே உள்ள form-ஐ fill பண்ணுங்க!'
-          : 'Our team would love to help you further. Please fill in the form below!';
-        const audioKey = state.language === 'ta' ? 'enrollment_prompt_ta' : 'enrollment_prompt_en';
-        setEnrollmentCancelled(false);
-        setTimeout(() => {
-          dispatch({
-            type: 'ADD_BOT_MESSAGE', payload: {
-              id: (Date.now() + 1).toString(),
-              sender: 'bot',
-              text: promptText,
-              audioUrl: getStaticAudioUrl(audioKey) || 'audio_enabled',
-              timestamp: Date.now(),
-              type: 'normal',
-            }
-          });
-          setEnrollmentFormCount(c => c + 1);
-        }, 300);
-      }
+      const promptText = state.language === 'ta'
+        ? 'உங்களுக்கு மேலும் உதவ எங்கள் team ஆர்வமாக இருக்கிறது. கீழே உள்ள form-ஐ fill பண்ணுங்க!'
+        : 'Our team would love to help you further. Please fill in the form below!';
+      const audioKey = state.language === 'ta' ? 'enrollment_prompt_ta' : 'enrollment_prompt_en';
+      if (enrollmentCancelled) setEnrollmentCancelled(false);
+      setTimeout(() => {
+        dispatch({
+          type: 'ADD_BOT_MESSAGE', payload: {
+            id: (Date.now() + 1).toString(),
+            sender: 'bot',
+            text: promptText,
+            audioUrl: getStaticAudioUrl(audioKey) || 'audio_enabled',
+            timestamp: Date.now(),
+            type: 'normal',
+          }
+        });
+        setEnrollmentFormCount(c => c + 1);
+      }, 300);
       return;
     }
 
     dispatch({ type: 'SET_LOADING', payload: true });
 
-    // iOS Safari: use AbortController to enforce a 45-second timeout.
-    // Without this, fetch hangs indefinitely on slow/unstable iPhone networks.
+    // iOS Safari: AbortController enforces a 45-second timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
       const response = await fetch(`${BACKEND_URL}/ask`, {
         method: 'POST',
-        // Note: do NOT append charset=utf-8 — iOS Safari can reject the non-standard suffix
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question,
@@ -527,8 +425,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
       const result = await response.json();
 
-      // Until the user has had MAX_FREE_QUESTIONS answered turns, do not surface enrollment_form
-      // (avoids modal on Q1 when the model or keywords mention "course" / program join).
       let resolvedType: Message['type'] =
         result.type === 'error' ? 'error' : (result.type as Message['type']) || 'normal';
       if (result.type === 'enrollment_form' && state.questionCount < MAX_FREE_QUESTIONS) {
@@ -548,7 +444,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       };
       dispatch({ type: 'ADD_BOT_MESSAGE', payload: botMessage });
 
-      // Count this answer — form gate kicks in on the NEXT question (Q4+)
       if (result.type !== 'error') {
         dispatch({ type: 'INCREMENT_QUESTION_COUNT' });
       }
@@ -581,15 +476,14 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     dispatch({ type: 'SET_LANGUAGE', payload: lang });
   }, []);
 
-  // clearMessages also resets enrollment so a fresh chat always starts at 0
+  // clearMessages resets everything and starts a completely blank chat
   const clearMessages = useCallback(() => {
     dispatch({ type: 'CLEAR_MESSAGES' });
     setEnrollmentSubmitted(false);
     setEnrollmentCancelled(false);
     clearEnrollmentStorage();
     localStorage.removeItem('conversation_messages');
-    dispatchWelcome();
-  }, [dispatchWelcome]);
+  }, []);
 
   const value: ConversationContextType = {
     messages: state.messages,
@@ -614,33 +508,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   return (
     <ConversationContext.Provider value={value}>
-      {showResumePrompt && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            background: '#1e293b', borderRadius: 16, padding: '28px 32px',
-            border: '1px solid rgba(139,92,246,0.3)', maxWidth: 360, textAlign: 'center',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-          }}>
-            <p style={{ color: '#fff', fontSize: 16, marginBottom: 20 }}>
-              Do you want to continue the previous chat?
-            </p>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-              <button onClick={handleNewChat} style={{
-                padding: '10px 24px', borderRadius: 8, border: '1px solid #475569',
-                background: '#334155', color: '#fff', cursor: 'pointer', fontSize: 14,
-              }}>New Chat</button>
-              <button onClick={handleResume} style={{
-                padding: '10px 24px', borderRadius: 8, border: 'none',
-                background: '#7c3aed', color: '#fff', cursor: 'pointer', fontSize: 14,
-              }}>Continue</button>
-            </div>
-          </div>
-        </div>
-      )}
       {children}
     </ConversationContext.Provider>
   );

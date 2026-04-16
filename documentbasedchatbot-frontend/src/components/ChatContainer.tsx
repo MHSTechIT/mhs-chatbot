@@ -47,11 +47,16 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
         }, 60);
     }, [messages, isLoading]);
 
-    // Auto-play audio for new bot messages (shared audio — won't replay on page switch)
+    // Auto-play audio for new bot answers (skip welcome-type — no startup audio)
     useEffect(() => {
         if (messages.length === 0) return;
         const lastMessage = messages[messages.length - 1];
-        if (lastMessage.sender === 'bot' && !isLoading && !hasPlayed(lastMessage.id)) {
+        if (
+            lastMessage.sender === 'bot' &&
+            lastMessage.type !== 'welcome' &&
+            !isLoading &&
+            !hasPlayed(lastMessage.id)
+        ) {
             markPlayed(lastMessage.id);
             setTimeout(() => {
                 playVoice(lastMessage.text, lastMessage.audioUrl || 'audio_enabled', lastMessage.voice_settings, lastMessage.emotion);
