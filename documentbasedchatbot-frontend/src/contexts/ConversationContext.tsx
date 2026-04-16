@@ -236,17 +236,12 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Start muted — Chrome and iOS 17+ allow muted autoplay without user gesture.
       // Unmute immediately in onplay so the user hears it automatically on page open.
       audio.src = audioUrl;
-      audio.muted = true;
-      audio.onplay = () => { audio.muted = false; setIsSpeaking(true); console.log('[Audio] onplay fired, unmuted'); };
+      audio.onplay = () => setIsSpeaking(true);
       audio.onended = () => setIsSpeaking(false);
-      audio.onerror = (e) => { audio.muted = false; setIsSpeaking(false); console.error('[Audio] onerror', e); };
-      console.log('[Audio] calling play(), muted=true, src=', audioUrl.slice(0, 60));
-      audio.play().then(() => {
-        console.log('[Audio] play() resolved OK');
-      }).catch((err) => {
-        audio.muted = false;
-        console.warn('[Audio] play() rejected:', err?.name, err?.message);
+      audio.onerror = () => setIsSpeaking(false);
+      audio.play().catch((err) => {
         if (err?.name === 'NotAllowedError') {
+          // Autoplay blocked — queue; splash screen prompts user to tap
           iosBlockedSrcRef.current = audioUrl;
           setHasPendingAudio(true);
         } else {
@@ -276,12 +271,10 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Check if a newer playVoice call started while we were fetching — if so, abort
       if (!audioRef.current || audioRef.current !== audio) return;
       audio.src = blobUrl;
-      audio.muted = true;
-      audio.onplay = () => { audio.muted = false; setIsSpeaking(true); };
+      audio.onplay = () => setIsSpeaking(true);
       audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
-      audio.onerror = () => { audio.muted = false; setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
+      audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
       audio.play().catch((err) => {
-        audio.muted = false;
         if (err?.name === 'NotAllowedError') {
           iosBlockedSrcRef.current = blobUrl;
           setHasPendingAudio(true);
