@@ -19,7 +19,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
     enrollmentFormCount, enrollmentSubmitted,
     enrollmentCancelled, setEnrollmentCancelled, handleEnrollmentSubmitted,
     hasPlayed, markPlayed,
-    isSpeaking, stopAudio, playVoice,
+    isSpeaking, hasPendingAudio, stopAudio, playVoice,
   } = useConversation();
 
   // Local form visibility — isolated from context so cancel is always instant
@@ -91,6 +91,22 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
           }}
         />
       </div>
+
+      {/* Tap-to-hear hint — shown when welcome audio is queued but autoplay is blocked */}
+      {hasPendingAudio && !isSpeaking && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+          <div className="flex flex-col items-center gap-3 animate-pulse">
+            <div className="w-16 h-16 rounded-full bg-theme-accent/30 border-2 border-theme-accent/60 flex items-center justify-center backdrop-blur-sm">
+              <svg className="w-8 h-8 text-theme-accent" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+            <span className="text-white/80 text-sm font-medium bg-black/40 px-4 py-1.5 rounded-full backdrop-blur-sm">
+              Tap anywhere to hear
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Top right controls */}
       <div className="absolute top-0 right-0 z-30 flex items-center gap-2 p-4">

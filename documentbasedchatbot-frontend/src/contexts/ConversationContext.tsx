@@ -42,6 +42,8 @@ export interface ConversationContextType {
   markPlayed: (id: string) => void;
   /** Shared audio — persists across page navigation so audio keeps playing when switching pages */
   isSpeaking: boolean;
+  /** true when audio is queued but blocked by autoplay policy — show "Tap to hear" hint */
+  hasPendingAudio: boolean;
   stopAudio: () => void;
   playVoice: (text: string, audioUrl?: string, voiceSettings?: any, emotionLabel?: string) => Promise<void>;
 }
@@ -153,6 +155,8 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   // ─── Shared Audio — single Audio element that survives page navigation ───────
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
+  // true when audio is queued but waiting for first user gesture (autoplay blocked)
+  const [hasPendingAudio, setHasPendingAudio] = React.useState(false);
   // iOS: stores the blob/data URL of audio that was blocked before user interaction
   const iosBlockedSrcRef = React.useRef<string | null>(null);
 
@@ -178,10 +182,10 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       audio.onended = null;
       audio.onerror = null;
       audio.src = src;
-      audio.onplay = () => setIsSpeaking(true);
+      audio.onplay = () => { setIsSpeaking(true); setHasPendingAudio(false); };
       audio.onended = () => { setIsSpeaking(false); if (src.startsWith('blob:')) URL.revokeObjectURL(src); };
-      audio.onerror = () => { setIsSpeaking(false); if (src.startsWith('blob:')) URL.revokeObjectURL(src); };
-      audio.play().catch(() => setIsSpeaking(false));
+      audio.onerror = () => { setIsSpeaking(false); setHasPendingAudio(false); if (src.startsWith('blob:')) URL.revokeObjectURL(src); };
+      audio.play().catch(() => { setIsSpeaking(false); setHasPendingAudio(false); });
       // Audio is playing — no longer need the gesture listeners
       document.removeEventListener('touchstart', unlock, true);
       document.removeEventListener('click', unlock, true);
@@ -278,7 +282,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
           // Autoplay blocked — queue for replay on first user gesture (iOS / desktop)
           if (err?.name === 'NotAllowedError') {
             iosBlockedSrcRef.current = srcUrl;
-            // isSpeaking stays false — no misleading indicator before user taps
+            setHasPendingAudio(true); // show "Tap to hear" hint
           } else {
             setIsSpeaking(false);
             if (srcUrl.startsWith('blob:')) URL.revokeObjectURL(srcUrl);
@@ -315,7 +319,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
         // Autoplay blocked — queue for replay on first user gesture
         if (err?.name === 'NotAllowedError') {
           iosBlockedSrcRef.current = blobUrl;
-          // isSpeaking stays false — no misleading indicator before user taps
+          setHasPendingAudio(true);
         } else {
           setIsSpeaking(false);
           URL.revokeObjectURL(blobUrl);
@@ -641,6 +645,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     hasPlayed,
     markPlayed,
     isSpeaking,
+    hasPendingAudio,
     stopAudio,
     playVoice,
   };
