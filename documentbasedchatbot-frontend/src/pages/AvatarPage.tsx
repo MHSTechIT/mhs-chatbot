@@ -19,7 +19,7 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
     enrollmentFormCount, enrollmentSubmitted,
     enrollmentCancelled, setEnrollmentCancelled, handleEnrollmentSubmitted,
     hasPlayed, markPlayed,
-    isSpeaking, hasPendingAudio, stopAudio, playVoice,
+    isSpeaking, stopAudio, playVoice,
   } = useConversation();
 
   // Local form visibility — isolated from context so cancel is always instant
@@ -92,26 +92,6 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
         />
       </div>
 
-      {/* Full-screen splash — shown when audio is queued but Chrome blocks autoplay.
-          Clicking it triggers the capture-phase unlock() listener which plays the audio. */}
-      {hasPendingAudio && !isSpeaking && (
-        <div
-          className="absolute inset-0 z-40 flex flex-col items-center justify-center cursor-pointer"
-          style={{ background: 'rgba(10,6,20,0.82)', backdropFilter: 'blur(6px)' }}
-        >
-          <div className="flex flex-col items-center gap-6 select-none">
-            <div className="w-20 h-20 rounded-full bg-theme-accent flex items-center justify-center shadow-[0_0_40px_rgba(139,92,246,0.6)] animate-pulse">
-              <svg className="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-            </div>
-            <div className="text-center">
-              <p className="text-white text-xl font-semibold mb-1">Tap to Start</p>
-              <p className="text-white/60 text-sm">Tap anywhere to hear the welcome</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Top right controls */}
       <div className="absolute top-0 right-0 z-30 flex items-center gap-2 p-4">
