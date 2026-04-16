@@ -177,12 +177,17 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       const pendingSrc = iosBlockedSrcRef.current;
       iosBlockedSrcRef.current = null;
 
+      // Clear stale handlers so the silent WAV does not trigger isSpeaking=true
+      audio.onplay = null;
+      audio.onended = null;
+      audio.onerror = null;
       audio.src = SILENT_WAV;
       audio.play().then(() => {
         audio.pause();
         // Replay any audio that was blocked before the first user gesture
         if (pendingSrc) {
           audio.src = pendingSrc;
+          audio.onplay = () => setIsSpeaking(true);
           audio.onended = () => {
             setIsSpeaking(false);
             if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc);
@@ -191,7 +196,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
             setIsSpeaking(false);
             if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc);
           };
-          setIsSpeaking(true);
           audio.play().catch(() => setIsSpeaking(false));
         }
       }).catch(() => {});
