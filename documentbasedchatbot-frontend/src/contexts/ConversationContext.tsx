@@ -237,13 +237,16 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Unmute immediately in onplay so the user hears it automatically on page open.
       audio.src = audioUrl;
       audio.muted = true;
-      audio.onplay = () => { audio.muted = false; setIsSpeaking(true); };
+      audio.onplay = () => { audio.muted = false; setIsSpeaking(true); console.log('[Audio] onplay fired, unmuted'); };
       audio.onended = () => setIsSpeaking(false);
-      audio.onerror = () => { audio.muted = false; setIsSpeaking(false); };
-      audio.play().catch((err) => {
+      audio.onerror = (e) => { audio.muted = false; setIsSpeaking(false); console.error('[Audio] onerror', e); };
+      console.log('[Audio] calling play(), muted=true, src=', audioUrl.slice(0, 60));
+      audio.play().then(() => {
+        console.log('[Audio] play() resolved OK');
+      }).catch((err) => {
         audio.muted = false;
+        console.warn('[Audio] play() rejected:', err?.name, err?.message);
         if (err?.name === 'NotAllowedError') {
-          // Older browser/iOS — queue for replay on next user gesture
           iosBlockedSrcRef.current = audioUrl;
           setHasPendingAudio(true);
         } else {
