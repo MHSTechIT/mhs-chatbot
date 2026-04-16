@@ -161,47 +161,65 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     return () => { audioRef.current?.pause(); };
   }, []);
 
-  // iOS Safari blocks audio.play() unless triggered by a direct user gesture.
-  // On first touch/click:
-  //   1. Play a silent 44-byte WAV to "unlock" the audio element.
-  //   2. If audio was blocked before this gesture (stored in iosBlockedSrcRef),
-  //      restore that src and replay it immediately — so the welcome / first bot
-  //      response plays as soon as the user first taps anything on the page.
+  // iOS / desktop browsers block audio.play() without a prior user gesture.
+  // Strategy:
+  //   • Keep listeners active until blocked audio is actually played.
+  //   • First gesture: unlock the Audio element via a silent WAV, then play any
+  //     queued audio immediately. If nothing is queued yet, keep listeners alive
+  //     so the next gesture can play it (handles "New Chat" click which fires
+  //     before dispatchWelcome queues the welcome audio).
+  //   • Subsequent gestures (element already unlocked): play queued audio directly.
+  const audioUnlockedRef = React.useRef(false);
   React.useEffect(() => {
     const SILENT_WAV = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-    let unlocked = false;
-    const unlock = () => {
-      if (unlocked || !audioRef.current) return;
-      unlocked = true;
-      const audio = audioRef.current;
-      const pendingSrc = iosBlockedSrcRef.current;
-      iosBlockedSrcRef.current = null;
 
-      // Clear stale handlers so the silent WAV does not trigger isSpeaking=true
+    const playPending = (audio: HTMLAudioElement, src: string) => {
       audio.onplay = null;
       audio.onended = null;
       audio.onerror = null;
-      audio.src = SILENT_WAV;
-      audio.play().then(() => {
-        audio.pause();
-        // Replay any audio that was blocked before the first user gesture
-        if (pendingSrc) {
-          audio.src = pendingSrc;
-          audio.onplay = () => setIsSpeaking(true);
-          audio.onended = () => {
-            setIsSpeaking(false);
-            if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc);
-          };
-          audio.onerror = () => {
-            setIsSpeaking(false);
-            if (pendingSrc.startsWith('blob:')) URL.revokeObjectURL(pendingSrc);
-          };
-          audio.play().catch(() => setIsSpeaking(false));
-        }
-      }).catch(() => {});
+      audio.src = src;
+      audio.onplay = () => setIsSpeaking(true);
+      audio.onended = () => { setIsSpeaking(false); if (src.startsWith('blob:')) URL.revokeObjectURL(src); };
+      audio.onerror = () => { setIsSpeaking(false); if (src.startsWith('blob:')) URL.revokeObjectURL(src); };
+      audio.play().catch(() => setIsSpeaking(false));
+      // Audio is playing — no longer need the gesture listeners
       document.removeEventListener('touchstart', unlock, true);
       document.removeEventListener('click', unlock, true);
     };
+
+    const unlock = () => {
+      if (!audioRef.current) return;
+      const audio = audioRef.current;
+      const pendingSrc = iosBlockedSrcRef.current;
+
+      if (!audioUnlockedRef.current) {
+        // First gesture: unlock the audio element with a silent WAV
+        audioUnlockedRef.current = true;
+        audio.onplay = null;
+        audio.onended = null;
+        audio.onerror = null;
+        audio.src = SILENT_WAV;
+        audio.play().then(() => {
+          audio.pause();
+          if (pendingSrc) {
+            iosBlockedSrcRef.current = null;
+            playPending(audio, pendingSrc);
+          }
+          // No pendingSrc yet — listeners stay active; next gesture will pick it up
+        }).catch(() => {
+          if (pendingSrc) {
+            iosBlockedSrcRef.current = null;
+            playPending(audio, pendingSrc);
+          }
+        });
+      } else if (pendingSrc) {
+        // Element already unlocked — play queued audio directly
+        iosBlockedSrcRef.current = null;
+        playPending(audio, pendingSrc);
+      }
+      // If already unlocked and nothing queued: no-op (listener stays)
+    };
+
     document.addEventListener('touchstart', unlock, { capture: true, passive: true });
     document.addEventListener('click', unlock, { capture: true, passive: true });
     return () => {
