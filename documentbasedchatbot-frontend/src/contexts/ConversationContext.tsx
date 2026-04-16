@@ -237,7 +237,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const isStaticAudio = audioUrl.startsWith('data:audio') || /\.(mp3|wav|ogg|aac)(\?|$)/i.test(audioUrl);
     if (isStaticAudio) {
       try {
-        setIsSpeaking(true);
         let srcUrl: string;
         if (audioUrl.startsWith('data:audio')) {
           srcUrl = audioUrl;
@@ -248,13 +247,16 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
           srcUrl = URL.createObjectURL(await resp.blob());
         }
         audio.src = srcUrl;
+        // Only set isSpeaking=true when audio actually starts — avoids showing
+        // the "Speaking" indicator when autoplay is blocked by the browser.
+        audio.onplay = () => setIsSpeaking(true);
         audio.onended = () => { setIsSpeaking(false); if (srcUrl.startsWith('blob:')) URL.revokeObjectURL(srcUrl); };
         audio.onerror = () => { setIsSpeaking(false); if (srcUrl.startsWith('blob:')) URL.revokeObjectURL(srcUrl); };
         await audio.play().catch((err) => {
-          // iOS NotAllowedError: audio blocked — queue for replay on first user gesture
+          // Autoplay blocked — queue for replay on first user gesture (iOS / desktop)
           if (err?.name === 'NotAllowedError') {
             iosBlockedSrcRef.current = srcUrl;
-            // Keep isSpeaking true so the "Speaking" indicator shows as a tap hint on iOS
+            // isSpeaking stays false — no misleading indicator before user taps
           } else {
             setIsSpeaking(false);
             if (srcUrl.startsWith('blob:')) URL.revokeObjectURL(srcUrl);
@@ -266,7 +268,6 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     // Dynamic TTS via ElevenLabs backend
     try {
-      setIsSpeaking(true);
       const payload: any = { text, language: state.language };
       if (voiceSettings) { payload.voice_settings = voiceSettings; payload.emotion_label = emotionLabel; }
 
@@ -285,12 +286,14 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Check if a newer playVoice call started while we were fetching — if so, abort
       if (!audioRef.current || audioRef.current !== audio) return;
       audio.src = blobUrl;
+      audio.onplay = () => setIsSpeaking(true);
       audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
       audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
       await audio.play().catch((err) => {
-        // iOS NotAllowedError: queue for replay on first user gesture
+        // Autoplay blocked — queue for replay on first user gesture
         if (err?.name === 'NotAllowedError') {
           iosBlockedSrcRef.current = blobUrl;
+          // isSpeaking stays false — no misleading indicator before user taps
         } else {
           setIsSpeaking(false);
           URL.revokeObjectURL(blobUrl);
