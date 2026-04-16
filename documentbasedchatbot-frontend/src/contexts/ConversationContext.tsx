@@ -233,16 +233,17 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
     //   • direct audio file paths like /audio/welcome_ta.mp3 (served by Vercel public/)
     const isStaticAudio = audioUrl.startsWith('data:audio') || /\.(mp3|wav|ogg|aac)(\?|$)/i.test(audioUrl);
     if (isStaticAudio) {
-      // Set src directly — browser preloads the file immediately.
-      // No async fetch needed; avoids the timing gap where a user tap
-      // could arrive before the blob URL is ready.
+      // Start muted — Chrome and iOS 17+ allow muted autoplay without user gesture.
+      // Unmute immediately in onplay so the user hears it automatically on page open.
       audio.src = audioUrl;
-      audio.onplay = () => setIsSpeaking(true);
+      audio.muted = true;
+      audio.onplay = () => { audio.muted = false; setIsSpeaking(true); };
       audio.onended = () => setIsSpeaking(false);
-      audio.onerror = () => setIsSpeaking(false);
+      audio.onerror = () => { audio.muted = false; setIsSpeaking(false); };
       audio.play().catch((err) => {
+        audio.muted = false;
         if (err?.name === 'NotAllowedError') {
-          // Autoplay blocked — queue for replay on next user gesture
+          // Older browser/iOS — queue for replay on next user gesture
           iosBlockedSrcRef.current = audioUrl;
           setHasPendingAudio(true);
         } else {
@@ -272,10 +273,12 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Check if a newer playVoice call started while we were fetching — if so, abort
       if (!audioRef.current || audioRef.current !== audio) return;
       audio.src = blobUrl;
-      audio.onplay = () => setIsSpeaking(true);
+      audio.muted = true;
+      audio.onplay = () => { audio.muted = false; setIsSpeaking(true); };
       audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
-      audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
+      audio.onerror = () => { audio.muted = false; setIsSpeaking(false); URL.revokeObjectURL(blobUrl); };
       audio.play().catch((err) => {
+        audio.muted = false;
         if (err?.name === 'NotAllowedError') {
           iosBlockedSrcRef.current = blobUrl;
           setHasPendingAudio(true);
