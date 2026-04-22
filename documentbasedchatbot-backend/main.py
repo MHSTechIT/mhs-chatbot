@@ -9,9 +9,16 @@ load_dotenv(env_path, override=True)
 import sys
 import logging
 import traceback
+from logging.handlers import RotatingFileHandler
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
-logging.basicConfig(level=logging.INFO)
+
+# Rotating log — max 10 MB per file, keep only 2 backups (max ~20 MB total)
+_log_handler = RotatingFileHandler(
+    "app.log", maxBytes=10 * 1024 * 1024, backupCount=2
+)
+_log_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+logging.basicConfig(level=logging.INFO, handlers=[_log_handler, logging.StreamHandler(sys.stdout)])
 log = logging.getLogger(__name__)
 
 log.info(f"GOOGLE_API_KEY present: {'GOOGLE_API_KEY' in os.environ}")
