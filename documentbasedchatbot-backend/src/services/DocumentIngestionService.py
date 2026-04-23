@@ -2,29 +2,129 @@ import os
 import logging
 import requests
 from bs4 import BeautifulSoup
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
 from src.repository.vector_db import get_vector_store
 
 logger = logging.getLogger(__name__)
 
 
-class DocumentIngestionService:
-    """Service to ingest documents into the vector store for RAG.
-    Uses Google Gemini embeddings API — no PyTorch, no local model download.
+# ---------------------------------------------------------------------------
+# Minimal Document dataclass (replaces langchain_core.documents.Document)
+# ---------------------------------------------------------------------------
+
+class Document:
+    """Lightweight stand-in for langchain Document — page_content + metadata."""
+    __slots__ = ("page_content", "metadata")
+
+    def __init__(self, page_content: str, metadata: dict = None):
+        self.page_content = page_content
+        self.metadata = metadata or {}
+
+
+# ---------------------------------------------------------------------------
+# Simple recursive-character text splitter (replaces langchain_text_splitters)
+# ---------------------------------------------------------------------------
+
+def _split_text(
+    text: str,
+    chunk_size: int = 500,
+    chunk_overlap: int = 100,
+) -> list:
     """
+    Split *text* into overlapping chunks no larger than *chunk_size*.
+    Strategy: paragraph → line → word (mirrors RecursiveCharacterTextSplitter).
+    """
+    if not text or not text.strip():
+        return []
+
+    def _merge(parts: list, sep: str) -> list:
+        """Merge parts into chunks, respecting chunk_size and chunk_overlap."""
+        chunks = []
+        current = ""
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+            candidate = (current + sep + part).strip() if current else part
+            if len(candidate) <= chunk_size:
+                current = candidate
+            else:
+                if current:
+                    chunks.append(current)
+                    # Carry overlap into the next chunk
+                    overlap = current[-chunk_overlap:].strip() if chunk_overlap else ""
+                    current = (overlap + sep + part).strip() if overlap else part
+                else:
+                    # single part already too large — split at word level
+                    words = part.split()
+                    for word in words:
+                        c2 = (current + " " + word).strip() if current else word
+                        if len(c2) <= chunk_size:
+                            current = c2
+                        else:
+                            if current:
+                                chunks.append(current)
+                            overlap = current[-chunk_overlap:].strip() if chunk_overlap and current else ""
+                            current = (overlap + " " + word).strip() if overlap else word
+        if current:
+            chunks.append(current)
+        return chunks
+
+    # Try paragraph split first
+    paragraphs = text.split("\n\n")
+    if len(paragraphs) > 1:
+        chunks = _merge(paragraphs, "\n\n")
+    else:
+        # Fall back to line split
+        lines = text.split("\n")
+        if len(lines) > 1:
+            chunks = _merge(lines, "\n")
+        else:
+            chunks = _merge([text], " ")
+
+    # Second pass: any chunk still over chunk_size gets word-split
+    final = []
+    for chunk in chunks:
+        if len(chunk) <= chunk_size:
+            final.append(chunk)
+        else:
+            words = chunk.split()
+            current = ""
+            for word in words:
+                c = (current + " " + word).strip() if current else word
+                if len(c) <= chunk_size:
+                    current = c
+                else:
+                    if current:
+                        final.append(current)
+                    overlap = current[-chunk_overlap:].strip() if chunk_overlap and current else ""
+                    current = (overlap + " " + word).strip() if overlap else word
+            if current:
+                final.append(current)
+
+    return [c for c in final if c.strip()]
+
+
+# ---------------------------------------------------------------------------
+# Service
+# ---------------------------------------------------------------------------
+
+class DocumentIngestionService:
+    """Ingest documents into the vector store for RAG.
+    Uses Google Gemini embeddings API — no PyTorch, no langchain, no local model.
+    """
+
+    CHUNK_SIZE = 500
+    CHUNK_OVERLAP = 100
 
     def __init__(self):
         self.vector_store = get_vector_store()
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,
-            chunk_overlap=100,
-            separators=["\n\n", "\n", " ", ""]
-        )
+
+    def _split(self, text: str) -> list:
+        return _split_text(text, self.CHUNK_SIZE, self.CHUNK_OVERLAP)
 
     def _add_chunks(self, chunks: list, title: str, extra_meta: dict = None) -> bool:
-        """Helper: wrap text chunks into Documents and add to vector store."""
-        if not chunks:
+        """Wrap text chunks into Documents and add to the vector store."""
+        if not chunks or not self.vector_store:
             return False
         meta = {"source": title}
         if extra_meta:
@@ -34,8 +134,12 @@ class DocumentIngestionService:
         logger.info(f"Ingested {len(docs)} chunks from '{title}'")
         return True
 
+    # ------------------------------------------------------------------
+    # File ingestors
+    # ------------------------------------------------------------------
+
     def ingest_text_file(self, file_path: str, title: str) -> bool:
-        """Ingest a plain text file into the vector store."""
+        """Ingest a plain text file."""
         try:
             if not os.path.exists(file_path):
                 logger.warning(f"File not found: {file_path}")
@@ -45,14 +149,13 @@ class DocumentIngestionService:
             if not content.strip():
                 logger.warning(f"File is empty: {file_path}")
                 return False
-            chunks = self.text_splitter.split_text(content)
-            return self._add_chunks(chunks, title, {"file_path": file_path})
+            return self._add_chunks(self._split(content), title, {"file_path": file_path})
         except Exception as e:
             logger.error(f"Error ingesting text file {file_path}: {e}")
             return False
 
     def ingest_pdf_file(self, file_path: str, title: str) -> bool:
-        """Ingest a PDF file using pypdf (no langchain-community needed)."""
+        """Ingest a PDF file using pypdf."""
         try:
             if not os.path.exists(file_path):
                 logger.warning(f"PDF not found: {file_path}")
@@ -63,7 +166,7 @@ class DocumentIngestionService:
             for page in reader.pages:
                 text = page.extract_text() or ""
                 if text.strip():
-                    all_chunks.extend(self.text_splitter.split_text(text))
+                    all_chunks.extend(self._split(text))
             if not all_chunks:
                 logger.warning(f"No content extracted from PDF: {file_path}")
                 return False
@@ -73,7 +176,7 @@ class DocumentIngestionService:
             return False
 
     def ingest_docx_file(self, file_path: str, title: str) -> bool:
-        """Ingest a DOCX file into the vector store."""
+        """Ingest a DOCX file."""
         try:
             if not os.path.exists(file_path):
                 logger.warning(f"DOCX not found: {file_path}")
@@ -84,11 +187,14 @@ class DocumentIngestionService:
             if not content.strip():
                 logger.warning(f"No content extracted from DOCX: {file_path}")
                 return False
-            chunks = self.text_splitter.split_text(content)
-            return self._add_chunks(chunks, title, {"file_path": file_path})
+            return self._add_chunks(self._split(content), title, {"file_path": file_path})
         except Exception as e:
             logger.error(f"Error ingesting DOCX {file_path}: {e}")
             return False
+
+    # ------------------------------------------------------------------
+    # Web scraper
+    # ------------------------------------------------------------------
 
     def scrape_webpage(self, url: str) -> str:
         """Scrape and extract plain text from a webpage."""
@@ -113,13 +219,17 @@ class DocumentIngestionService:
             if not content.strip():
                 logger.warning(f"No content from URL: {url}")
                 return False
-            chunks = self.text_splitter.split_text(content)
+            chunks = self._split(content)
             if not chunks:
                 return False
             return self._add_chunks(chunks, title, {"url": url, "type": "link"})
         except Exception as e:
             logger.error(f"Error ingesting link {url}: {e}")
             return False
+
+    # ------------------------------------------------------------------
+    # Router
+    # ------------------------------------------------------------------
 
     def ingest_document(self, file_path: str, file_name: str, title: str, doc_type: str) -> bool:
         """Route ingestion based on document type."""
