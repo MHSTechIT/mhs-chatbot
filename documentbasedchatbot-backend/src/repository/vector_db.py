@@ -11,7 +11,6 @@ _vector_store_instance = None
 
 def _create_db_engine():
     connect_args = {}
-    # Supabase requires SSL. We add sslmode=require if not already present.
     if "supabase.co" in DB_CONNECTION and "sslmode=" not in DB_CONNECTION:
         connect_args["sslmode"] = "require"
 
@@ -21,21 +20,22 @@ def _create_db_engine():
 
     return create_engine(DB_CONNECTION, **engine_kwargs)
 
+
 def get_vector_store():
     """
-    Returns a singleton instance of the PGVector store connected to the vector database.
-    It initializes the same HuggingFace embeddings model used during ingestion.
-    Returns None if connection fails - caller should handle gracefully.
-    Heavy imports (torch, sentence-transformers) are deferred to first call.
+    Returns a singleton PGVector store using Google Gemini embeddings (API-based).
+    No local model download, no PyTorch — embeddings run via Gemini API.
     """
     global _vector_store_instance
     if _vector_store_instance is None:
         try:
-            # Deferred imports — torch/sentence-transformers are ~400MB,
-            # loading them at module level crashes Render's 512MB free tier.
-            from langchain_huggingface import HuggingFaceEmbeddings
+            from langchain_google_genai import GoogleGenerativeAIEmbeddings
             from langchain_postgres.vectorstores import PGVector
-            embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
+            embeddings = GoogleGenerativeAIEmbeddings(
+                model="models/text-embedding-004",
+                google_api_key=os.getenv("GOOGLE_API_KEY"),
+            )
             engine = _create_db_engine()
 
             _vector_store_instance = PGVector(
@@ -55,23 +55,16 @@ def get_vector_store():
 def retrieve_relevant_documents(query: str, k: int = 5) -> str:
     """
     Retrieve relevant document chunks from the vector store based on semantic similarity.
-
-    Args:
-        query: The user's question
-        k: Number of chunks to retrieve (default 5)
-
-    Returns:
-        Formatted string of relevant document chunks
     """
     try:
         vector_store = get_vector_store()
-        # Perform similarity search
+        if not vector_store:
+            return ""
         docs = vector_store.similarity_search(query, k=k)
 
         if not docs:
             return ""
 
-        # Format the retrieved documents
         content = ""
         for i, doc in enumerate(docs, 1):
             source = doc.metadata.get("source", "Unknown")
