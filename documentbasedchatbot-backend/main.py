@@ -70,6 +70,24 @@ async def lifespan(app: FastAPI):
     else:
         log.info("✅ App startup complete — all modules loaded")
 
+    # 🧹 Clean up leftover uploaded files from previous crashed/incomplete uploads
+    try:
+        import glob as _glob
+        upload_dir = "uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        leftovers = _glob.glob(os.path.join(upload_dir, "*"))
+        if leftovers:
+            for f in leftovers:
+                try:
+                    os.remove(f)
+                except Exception:
+                    pass
+            log.info(f"🧹 Cleaned {len(leftovers)} leftover file(s) from uploads folder")
+        else:
+            log.info("🧹 Uploads folder is clean")
+    except Exception as e:
+        log.warning(f"Upload cleanup skipped: {e}")
+
     # Pre-warm LLM — run in a thread so blocking network call doesn't freeze the event loop
     try:
         from src.controller.chat_controller import get_health_service

@@ -149,6 +149,40 @@ class SimpleVectorStore:
             raise
 
 
+    def delete_by_source(self, title: str) -> int:
+        """Delete all embeddings whose metadata 'source' equals title."""
+        try:
+            with _get_conn() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """DELETE FROM langchain_pg_embedding
+                           WHERE collection_id = %s
+                           AND cmetadata->>'source' = %s""",
+                        [self._collection_id, title],
+                    )
+                    count = cur.rowcount
+                conn.commit()
+            logger.info(f"Deleted {count} embeddings with source='{title}'")
+            return count
+        except Exception as e:
+            logger.error(f"Error deleting embeddings by source: {e}")
+            return 0
+
+    def delete_collection(self) -> None:
+        """Delete ALL embeddings in this collection (used by clear-all)."""
+        try:
+            with _get_conn() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "DELETE FROM langchain_pg_embedding WHERE collection_id = %s",
+                        [self._collection_id],
+                    )
+                conn.commit()
+            logger.info(f"Deleted all embeddings in collection '{self.collection_name}'")
+        except Exception as e:
+            logger.error(f"Error deleting collection embeddings: {e}")
+
+
 def get_vector_store():
     """
     Returns the singleton SimpleVectorStore.

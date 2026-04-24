@@ -156,6 +156,14 @@ async def upload_document(file: UploadFile = File(...), title: str = Form(...)):
             except Exception as e:
                 logger.error(f"Error indexing document: {str(e)}")
 
+        # ✅ Auto-delete uploaded file — content is already saved in DB and vector store
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                logger.info(f"🧹 Deleted uploaded file after ingestion: {file_path}")
+        except Exception as e:
+            logger.warning(f"Could not delete uploaded file: {e}")
+
         return {"success": True, "id": doc_id, "message": "Document uploaded to database"}
 
     except Exception as e:
@@ -247,23 +255,15 @@ async def delete_document(doc_id: str):
         if not doc:
             raise HTTPException(status_code=404, detail="Document not found")
 
-        # Remove from vector store using the document title as metadata
-        if ingestion_service:
-            try:
-                from src.repository.vector_db import get_vector_store
-                vector_store = get_vector_store()
-
-                # Delete documents with matching source metadata
-                logger.info(f"Attempting to remove document '{doc['title']}' from vector store")
-                try:
-                    # PGVector supports filtering by metadata
-                    vector_store.delete(ids=[doc_id])
-                    logger.info(f"Removed '{doc['title']}' from vector store")
-                except Exception as e:
-                    logger.warning(f"Could not delete from vector store by ID: {e}. This may be normal if not yet indexed.")
-
-            except Exception as e:
-                logger.error(f"Error removing from vector store: {str(e)}")
+        # Remove from vector store by matching the document title (source metadata)
+        try:
+            from src.repository.vector_db import get_vector_store
+            vector_store = get_vector_store()
+            if vector_store:
+                count = vector_store.delete_by_source(doc['title'])
+                logger.info(f"🧹 Removed {count} embeddings for '{doc['title']}' from vector store")
+        except Exception as e:
+            logger.error(f"Error removing from vector store: {e}")
 
         # Delete from database
         success = _get_admin_repo().delete_document(doc_id)
@@ -492,22 +492,16 @@ async def clear_all_data():
             os.makedirs("uploads", exist_ok=True)
             logger.info("✅ Deleted uploads folder")
 
-        # Clear vector store collection
-        if ingestion_service:
-            try:
-                from src.repository.vector_db import get_vector_store
-                vector_store = get_vector_store()
-
-                # Delete the entire collection and recreate it
-                try:
-                    vector_store.delete_collection()
-                    logger.info("✅ Deleted vector store collection")
-                except Exception as e:
-                    logger.warning(f"Could not delete collection (may not exist yet): {e}")
-
-            except Exception as e:
-                logger.error(f"Error clearing vector store: {str(e)}")
-                raise HTTPException(status_code=500, detail=f"Failed to clear vector store: {str(e)}")
+        # Clear all embeddings from vector store
+        try:
+            from src.repository.vector_db import get_vector_store
+            vector_store = get_vector_store()
+            if vector_store:
+                vector_store.delete_collection()
+                logger.info("✅ Cleared all embeddings from vector store")
+        except Exception as e:
+            logger.error(f"Error clearing vector store: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to clear vector store: {e}")
 
         logger.info("🔄 System cleared - ready to add new documents from scratch")
         return {
