@@ -1,0 +1,6 @@
+{
+  "installCommand": "cd documentbasedchatbot-frontend && npm install",
+  "buildCommand": "cd documentbasedchatbot-frontend && npm run build",
+  "outputDirectory": "documentbasedchatbot-frontend/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
