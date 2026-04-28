@@ -57,7 +57,7 @@ export class ChatService implements IChatService {
                     if (errorObj && errorObj.detail) {
                         errorMessage = typeof errorObj.detail === 'string' ? errorObj.detail : JSON.stringify(errorObj.detail);
                     }
-                } catch (e) {
+                } catch {
                     // Ignore JSON parse errors, fallback to generic message plus some text
                     if (errorText.length > 0 && errorText.length < 200) {
                         errorMessage += `: ${errorText}`;

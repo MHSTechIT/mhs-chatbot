@@ -62,6 +62,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                 playVoice(lastMessage.text, lastMessage.audioUrl || 'audio_enabled', lastMessage.voice_settings, lastMessage.emotion);
             }, 500);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [messages, isLoading]);
 
     // Show enrollment form when context fires a new trigger (enrollmentFormCount increments).

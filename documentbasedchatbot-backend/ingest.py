@@ -6,7 +6,9 @@ from langchain_postgres.vectorstores import PGVector
 from sqlalchemy import create_engine, text
 
 # Database Connection String
-DB_CONNECTION = os.getenv("DB_CONNECTION", "postgresql+psycopg://postgres:%24erver2026@13.234.115.104:5432/QNA_BOT")
+DB_CONNECTION = os.getenv("DB_CONNECTION")
+if not DB_CONNECTION:
+    raise RuntimeError("DB_CONNECTION environment variable is required but not set.")
 COLLECTION_NAME = "company_info"
 
 def _create_db_engine():

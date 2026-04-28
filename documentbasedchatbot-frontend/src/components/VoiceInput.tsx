@@ -13,7 +13,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription, disable
     const [audioLevel, setAudioLevel] = useState(0);
     const [micOk, setMicOk] = useState<boolean | null>(null); // null=untested, true=works, false=no audio
 
-    const recognitionRef = useRef<any>(null);
+    const recognitionRef = useRef<SpeechRecognition | null>(null);
     const accumulatedTranscriptRef = useRef('');
     const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const shouldListenRef = useRef(false);
@@ -58,26 +58,29 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription, disable
                 animFrameRef.current = requestAnimationFrame(tick);
             };
             animFrameRef.current = requestAnimationFrame(tick);
-        } catch (e) {
+        } catch {
             setMicOk(false);
             setError("Cannot access microphone");
         }
     };
 
-    const scheduleRestart = (recognition: any) => {
+    const scheduleRestart = (recognition: SpeechRecognition) => {
         // Prevent double-restart: only one timer allowed at a time
         if (restartTimerRef.current) return;
         restartTimerRef.current = setTimeout(() => {
             restartTimerRef.current = null;
             if (shouldListenRef.current) {
-                try { recognition.start(); } catch (_) {}
+                try { recognition.start(); } catch { /* ignore */ }
             }
         }, 300);
     };
 
     useEffect(() => {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        type WebkitWindow = Window & { webkitSpeechRecognition?: typeof window.SpeechRecognition };
+        const SpeechRecognition = window.SpeechRecognition ||
+            (window as WebkitWindow).webkitSpeechRecognition;
         if (!SpeechRecognition) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setError("Not supported - use Chrome browser");
             return;
         }
@@ -96,7 +99,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription, disable
             if (silenceTimeoutRef.current) { clearTimeout(silenceTimeoutRef.current); silenceTimeoutRef.current = null; }
         };
 
-        recognition.onresult = (event: any) => {
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
             let transcript = '';
             for (let i = 0; i < event.results.length; i++) {
                 const t = event.results[i][0]?.transcript;
@@ -108,13 +111,13 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription, disable
                 setMicOk(true); // speech detected = mic confirmed working
                 if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
                 silenceTimeoutRef.current = setTimeout(() => {
-                    try { recognition.stop(); } catch (_) {}
+                    try { recognition.stop(); } catch { /* ignore */ }
                     silenceTimeoutRef.current = null;
                 }, SILENCE_DELAY_MS);
             }
         };
 
-        recognition.onerror = (event: any) => {
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
             if (event.error === 'no-speech') {
                 // Don't log spam — silently restart
                 scheduleRestart(recognition);
@@ -156,7 +159,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription, disable
             if (restartTimerRef.current) { clearTimeout(restartTimerRef.current); restartTimerRef.current = null; }
             if (silenceTimeoutRef.current) { clearTimeout(silenceTimeoutRef.current); silenceTimeoutRef.current = null; }
             stopAudioMonitor();
-            try { recognition.abort(); } catch (_) {}
+            try { recognition.abort(); } catch { /* ignore */ }
         };
     }, [onTranscription]);
 
@@ -167,7 +170,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscription, disable
             shouldListenRef.current = false;
             if (restartTimerRef.current) { clearTimeout(restartTimerRef.current); restartTimerRef.current = null; }
             stopAudioMonitor();
-            try { recognitionRef.current.stop(); } catch (_) {}
+            try { recognitionRef.current.stop(); } catch { /* ignore */ }
         } else {
             shouldListenRef.current = true;
             setMicOk(null);

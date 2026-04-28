@@ -14,7 +14,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ onTranscription, disable
     const [transcript, setTranscript] = useState('');
     const [micOk, setMicOk] = useState<boolean | null>(null);
 
-    const recognitionRef = useRef<any>(null);
+    const recognitionRef = useRef<SpeechRecognition | null>(null);
     const accumulatedTranscriptRef = useRef('');
     const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const shouldListenRef = useRef(false);
@@ -66,19 +66,22 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ onTranscription, disable
         }
     };
 
-    const scheduleRestart = (recognition: any) => {
+    const scheduleRestart = (recognition: SpeechRecognition) => {
         if (restartTimerRef.current) return;
         restartTimerRef.current = setTimeout(() => {
             restartTimerRef.current = null;
             if (shouldListenRef.current) {
-                try { recognition.start(); } catch (_) {}
+                try { recognition.start(); } catch { /* ignore */ }
             }
         }, 300);
     };
 
     useEffect(() => {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        type WebkitWindow = Window & { webkitSpeechRecognition?: typeof window.SpeechRecognition };
+        const SpeechRecognition = window.SpeechRecognition ||
+            (window as WebkitWindow).webkitSpeechRecognition;
         if (!SpeechRecognition) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setError("Speech recognition not supported - use Chrome browser");
             return;
         }
@@ -99,7 +102,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ onTranscription, disable
             if (silenceTimeoutRef.current) { clearTimeout(silenceTimeoutRef.current); silenceTimeoutRef.current = null; }
         };
 
-        recognition.onresult = (event: any) => {
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
             let interimTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0]?.transcript || '';
@@ -118,13 +121,13 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ onTranscription, disable
                 setMicOk(true);
                 if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
                 silenceTimeoutRef.current = setTimeout(() => {
-                    try { recognition.stop(); } catch (_) {}
+                    try { recognition.stop(); } catch { /* ignore */ }
                     silenceTimeoutRef.current = null;
                 }, SILENCE_DELAY_MS);
             }
         };
 
-        recognition.onerror = (event: any) => {
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
             console.log('[VoiceAgent] Error:', event.error);
             if (event.error === 'no-speech') {
                 scheduleRestart(recognition);
@@ -170,7 +173,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ onTranscription, disable
             if (restartTimerRef.current) { clearTimeout(restartTimerRef.current); restartTimerRef.current = null; }
             if (silenceTimeoutRef.current) { clearTimeout(silenceTimeoutRef.current); silenceTimeoutRef.current = null; }
             stopAudioMonitor();
-            try { recognition.abort(); } catch (_) {}
+            try { recognition.abort(); } catch { /* ignore */ }
         };
     }, [onTranscription]);
 
@@ -182,7 +185,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({ onTranscription, disable
             shouldListenRef.current = false;
             if (restartTimerRef.current) { clearTimeout(restartTimerRef.current); restartTimerRef.current = null; }
             stopAudioMonitor();
-            try { recognitionRef.current.stop(); } catch (_) {}
+            try { recognitionRef.current.stop(); } catch { /* ignore */ }
         } else {
             console.log('[VoiceAgent] Starting listening');
             shouldListenRef.current = true;

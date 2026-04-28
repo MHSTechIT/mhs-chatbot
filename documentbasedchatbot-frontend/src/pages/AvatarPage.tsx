@@ -39,13 +39,11 @@ export const AvatarPage: React.FC<AvatarPageProps> = ({
       !hasPlayed(lastMessage.id)
     ) {
       markPlayed(lastMessage.id);
-      playVoice(
-        lastMessage.text,
-        (lastMessage as any).audioUrl || 'audio_enabled',
-        (lastMessage as any).voice_settings,
-        (lastMessage as any).emotion
-      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const msg = lastMessage as any;
+      playVoice(lastMessage.text, msg.audioUrl || 'audio_enabled', msg.voice_settings, msg.emotion);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, isLoading]);
 
   // Show enrollment form when context fires a new trigger (enrollmentFormCount increments).
