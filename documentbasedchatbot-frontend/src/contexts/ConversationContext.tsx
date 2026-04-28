@@ -64,10 +64,13 @@ interface ConversationState {
   questionCount: number;
 }
 
+const browserLang = navigator.language || navigator.languages?.[0] || '';
+const defaultLanguage: 'en' | 'ta' = browserLang.startsWith('ta') ? 'ta' : 'en';
+
 const initialState: ConversationState = {
   messages: [],
   isLoading: false,
-  language: 'ta',
+  language: defaultLanguage,
   questionCount: 0,
 };
 
