@@ -1,6 +1,13 @@
 import React, { createContext, useReducer, useCallback } from 'react';
 import type { ReactNode } from 'react';
 
+export interface VoiceSettings {
+  stability: number;
+  similarity_boost: number;
+  style: number;
+  use_speaker_boost: boolean;
+}
+
 export interface Message {
   id: string;
   sender: 'user' | 'bot';
@@ -9,12 +16,7 @@ export interface Message {
   timestamp: number;
   type?: 'normal' | 'enrollment_form' | 'error' | 'welcome';
   isError?: boolean;
-  voice_settings?: {
-    stability: number;
-    similarity_boost: number;
-    style: number;
-    use_speaker_boost: boolean;
-  };
+  voice_settings?: VoiceSettings;
   emotion?: string;
 }
 
@@ -43,7 +45,7 @@ export interface ConversationContextType {
   /** Shared audio — persists across page navigation so audio keeps playing when switching pages */
   isSpeaking: boolean;
   stopAudio: () => void;
-  playVoice: (text: string, audioUrl?: string, voiceSettings?: Record<string, number>, emotionLabel?: string) => Promise<void>;
+  playVoice: (text: string, audioUrl?: string, voiceSettings?: VoiceSettings, emotionLabel?: string) => Promise<void>;
 }
 
 const ConversationContext = createContext<ConversationContextType | undefined>(undefined);
@@ -182,7 +184,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const playVoice = React.useCallback(async (
     text: string,
     audioUrl?: string,
-    voiceSettings?: Record<string, number>,
+    voiceSettings?: VoiceSettings,
     emotionLabel?: string
   ) => {
     if (!audioUrl || !audioRef.current) return;
@@ -219,7 +221,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     // Dynamic TTS via ElevenLabs backend
     try {
-      const payload: { text: string; language: string; voice_settings?: Record<string, number>; emotion_label?: string } = { text, language: state.language };
+      const payload: { text: string; language: string; voice_settings?: VoiceSettings; emotion_label?: string } = { text, language: state.language };
       if (voiceSettings) { payload.voice_settings = voiceSettings; payload.emotion_label = emotionLabel; }
 
       const ttsController = new AbortController();
