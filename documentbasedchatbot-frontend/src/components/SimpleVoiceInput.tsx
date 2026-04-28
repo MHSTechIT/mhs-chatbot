@@ -71,7 +71,7 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
         const recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = true;
-        recognition.lang = language === 'ta' ? 'ta-IN' : 'en-IN';
+        recognition.lang = language === 'ta' ? 'ta-IN' : 'en-US';
         recognitionRef.current = recognition;
 
         recognition.onstart = () => {
