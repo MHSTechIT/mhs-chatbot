@@ -14,7 +14,7 @@ interface SimpleVoiceInputProps {
     isDark?: boolean;
 }
 
-const BACKEND_URL = ((import.meta as any).env?.VITE_API_URL || 'http://localhost:8000').trim();
+const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').trim();
 
 export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
     onTranscription,
@@ -42,7 +42,7 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
     const useMediaRecorder = isIOS;
 
     // ── Web Speech API refs ───────────────────────────────────────────────────
-    const recognitionRef = useRef<any>(null);
+    const recognitionRef = useRef<SpeechRecognition | null>(null);
     const accumulatedTranscriptRef = useRef('');
     const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const shouldListenRef = useRef(false);
@@ -54,7 +54,9 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
 
     // ── Web Speech API initialisation ─────────────────────────────────────────
     useEffect(() => {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        type WebkitWindow = Window & { webkitSpeechRecognition?: typeof window.SpeechRecognition };
+        const SpeechRecognition = window.SpeechRecognition ||
+            (window as WebkitWindow).webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
             setError(isIOS
@@ -80,7 +82,7 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
             if (silenceTimeoutRef.current) { clearTimeout(silenceTimeoutRef.current); silenceTimeoutRef.current = null; }
         };
 
-        recognition.onresult = (event: any) => {
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
             let interimTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const speechResult = event.results[i][0].transcript;
@@ -93,16 +95,16 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
             if (accumulatedTranscriptRef.current) {
                 if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
                 silenceTimeoutRef.current = setTimeout(() => {
-                    try { recognition.stop(); } catch (_) {}
+                    try { recognition.stop(); } catch { /* ignore */ }
                     silenceTimeoutRef.current = null;
                 }, SILENCE_DELAY_MS);
             }
         };
 
-        recognition.onerror = (event: any) => {
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
             console.error('[SimpleVoiceInput] Error:', event.error);
             if (event.error === 'no-speech' || event.error === 'aborted') {
-                if (shouldListenRef.current) { try { recognition.start(); } catch (_) {} }
+                if (shouldListenRef.current) { try { recognition.start(); } catch { /* ignore */ } }
                 return;
             }
             if (event.error === 'service-not-allowed') {
@@ -127,7 +129,7 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
                 accumulatedTranscriptRef.current = '';
                 setTranscript('');
             } else if (shouldListenRef.current) {
-                try { recognition.start(); } catch (_) {}
+                try { recognition.start(); } catch { /* ignore */ }
             } else {
                 setIsListening(false);
                 accumulatedTranscriptRef.current = '';
@@ -139,8 +141,9 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
         return () => {
             shouldListenRef.current = false;
             if (silenceTimeoutRef.current) { clearTimeout(silenceTimeoutRef.current); silenceTimeoutRef.current = null; }
-            try { recognition.abort(); } catch (_) {}
+            try { recognition.abort(); } catch { /* ignore */ }
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onTranscription, language, useMediaRecorder]);
 
     // ── MediaRecorder helpers (iOS Tamil) ─────────────────────────────────────
@@ -205,8 +208,8 @@ export const SimpleVoiceInput: React.FC<SimpleVoiceInputProps> = ({
             mediaRecorderRef.current = recorder;
             setIsListening(true);
             setError(null);
-        } catch (err: any) {
-            if (err.name === 'NotAllowedError') {
+        } catch (err: unknown) {
+            if (err instanceof Error && err.name === 'NotAllowedError') {
                 setError("Microphone permission denied");
             } else {
                 setError("Could not start recording");

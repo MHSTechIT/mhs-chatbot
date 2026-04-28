@@ -123,15 +123,19 @@ app = FastAPI(
 if RateLimitMiddleware:
     app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
 
-# CORS: allow localhost (dev) and any HTTPS origin (production).
-# iOS Safari sends strict CORS preflight requests — allowing all HTTPS origins
-# prevents 403 blocks when the app is served from custom or Render/Railway domains.
+# CORS: allow localhost (dev) + explicit production origin from env.
+# Set ALLOWED_ORIGIN=https://your-frontend-domain.com in production .env
+_allowed_origin = os.getenv("ALLOWED_ORIGIN", "")
+_cors_origins = [_allowed_origin] if _allowed_origin else []
+_cors_regex = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"(http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*)",
+    allow_origins=_cors_origins,
+    allow_origin_regex=_cors_regex,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
     expose_headers=["*"],
 )
 
@@ -169,7 +173,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         )
     return JSONResponse(
         status_code=500,
-        content={"detail": str(exc), "type": "internal_error"},
+        content={"detail": "An internal error occurred. Please try again later.", "type": "internal_error"},
         headers=cors,
     )
 

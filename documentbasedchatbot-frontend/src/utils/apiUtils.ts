@@ -55,7 +55,7 @@ export async function safeFetch<T>(
  */
 export async function safePost<T>(
   url: string,
-  body: any,
+  body: unknown,
   options?: Omit<RequestInit, 'method' | 'body'>
 ): Promise<ApiResponse<T>> {
   return safeFetch<T>(url, {

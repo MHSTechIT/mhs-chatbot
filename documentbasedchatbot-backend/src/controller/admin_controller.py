@@ -3,15 +3,16 @@ import io
 import logging
 import uuid as _uuid_module
 from datetime import datetime
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException
+from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException
 from pydantic import BaseModel
 from src.repository.admin_repo import get_admin_repository
 from src.repository.enrollment_repo import EnrollmentRepository
 from src.database import SessionLocal
+from src.middleware.admin_auth import verify_admin_key
 # DocumentIngestionService deferred to avoid importing torch/HuggingFace at startup
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/admin", tags=["Admin"])
+router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[Depends(verify_admin_key)])
 
 # All services lazily initialized — no DB/ML connections at import time
 ingestion_service = None
@@ -168,7 +169,7 @@ async def upload_document(file: UploadFile = File(...), title: str = Form(...)):
 
     except Exception as e:
         logger.error(f"Upload error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")
     finally:
         if db:
             db.close()
@@ -207,7 +208,7 @@ async def add_link(request: LinkRequest):
 
     except Exception as e:
         logger.error(f"Link error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")
 
 
 @router.get("/documents/content-status")
@@ -227,7 +228,7 @@ async def get_documents_content_status():
             })
         return {"success": True, "documents": result}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")
 
 
 @router.get("/documents")
@@ -244,7 +245,7 @@ async def get_documents():
         }
     except Exception as e:
         logger.error(f"Error fetching documents: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")
 
 
 @router.delete("/documents/{doc_id}")
@@ -277,7 +278,7 @@ async def delete_document(doc_id: str):
         raise
     except Exception as e:
         logger.error(f"Delete error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")
 
 
 @router.get("/documents/search")
@@ -288,7 +289,7 @@ async def search_documents(query: str):
         return {"success": True, "results": results}
     except Exception as e:
         logger.error(f"Search error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")
 
 
 @router.post("/submit-enrollment")
@@ -317,7 +318,7 @@ async def submit_enrollment(request: EnrollmentRequest):
         raise
     except Exception as e:
         logger.error(f"Enrollment submission error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")
     finally:
         db.close()
 
@@ -388,7 +389,7 @@ async def generate_static_audio():
         return {"success": True, "results": results}
     except Exception as e:
         logger.error(f"Static audio generation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")
     finally:
         db.close()
 
@@ -445,11 +446,11 @@ async def get_static_audio():
 
 
 @router.get("/leads")
-async def get_enrollment_leads():
-    """Get all enrollment leads"""
+async def get_enrollment_leads(limit: int = 20, offset: int = 0):
+    """Get enrollment leads with pagination"""
     db = SessionLocal()
     try:
-        enrollments = EnrollmentRepository.get_all_enrollments(db)
+        enrollments, total = EnrollmentRepository.get_enrollments_paginated(db, limit=limit, offset=offset)
         leads = [
             {
                 "id": str(e.id),
@@ -460,10 +461,10 @@ async def get_enrollment_leads():
             }
             for e in enrollments
         ]
-        return {"success": True, "leads": leads, "count": len(leads)}
+        return {"success": True, "leads": leads, "count": len(leads), "total": total}
     except Exception as e:
         logger.error(f"Error fetching leads: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch leads.")
     finally:
         db.close()
 
@@ -513,4 +514,4 @@ async def clear_all_data():
         raise
     except Exception as e:
         logger.error(f"Error clearing data: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")

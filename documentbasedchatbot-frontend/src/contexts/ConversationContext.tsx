@@ -43,7 +43,7 @@ export interface ConversationContextType {
   /** Shared audio — persists across page navigation so audio keeps playing when switching pages */
   isSpeaking: boolean;
   stopAudio: () => void;
-  playVoice: (text: string, audioUrl?: string, voiceSettings?: any, emotionLabel?: string) => Promise<void>;
+  playVoice: (text: string, audioUrl?: string, voiceSettings?: Record<string, number>, emotionLabel?: string) => Promise<void>;
 }
 
 const ConversationContext = createContext<ConversationContextType | undefined>(undefined);
@@ -97,13 +97,13 @@ function conversationReducer(state: ConversationState, action: ConversationActio
 }
 
 // Backend URL — trim() removes the trailing newline that Render/Vercel sometimes injects into env vars
-const BACKEND_URL = ((import.meta as any).env?.VITE_API_URL || 'http://localhost:8000').trim();
+const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').trim();
 
 // Helper: clear all enrollment-related localStorage keys
 function clearEnrollmentStorage() {
   try {
     localStorage.removeItem('enrollment_submitted');
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 // Load static audio cache from localStorage synchronously (used for enrollment audio)
@@ -179,7 +179,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const playVoice = React.useCallback(async (
     text: string,
     audioUrl?: string,
-    voiceSettings?: any,
+    voiceSettings?: Record<string, number>,
     emotionLabel?: string
   ) => {
     if (!audioUrl || !audioRef.current) return;
@@ -216,7 +216,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     // Dynamic TTS via ElevenLabs backend
     try {
-      const payload: any = { text, language: state.language };
+      const payload: { text: string; language: string; voice_settings?: Record<string, number>; emotion_label?: string } = { text, language: state.language };
       if (voiceSettings) { payload.voice_settings = voiceSettings; payload.emotion_label = emotionLabel; }
 
       const ttsController = new AbortController();
@@ -301,19 +301,19 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   React.useEffect(() => {
     try {
       localStorage.setItem('enrollment_submitted', String(enrollmentSubmitted));
-    } catch {}
+    } catch { /* ignore */ }
   }, [enrollmentSubmitted]);
 
   React.useEffect(() => {
     try {
       localStorage.setItem('conversation_messages', JSON.stringify(state.messages));
-    } catch {}
+    } catch { /* ignore */ }
   }, [state.messages]);
 
   React.useEffect(() => {
     try {
       localStorage.setItem('conversation_language', state.language);
-    } catch {}
+    } catch { /* ignore */ }
   }, [state.language]);
 
   const MAX_FREE_QUESTIONS = 4;
@@ -447,11 +447,12 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
       if (result.type !== 'error') {
         dispatch({ type: 'INCREMENT_QUESTION_COUNT' });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       clearTimeout(timeoutId);
       console.error('Error asking question:', error);
-      const isTimeout = error?.name === 'AbortError';
-      const isNetworkError = error?.message === 'Failed to fetch' || error?.message === 'Network request failed';
+      const err = error as { name?: string; message?: string };
+      const isTimeout = err?.name === 'AbortError';
+      const isNetworkError = err?.message === 'Failed to fetch' || err?.message === 'Network request failed';
       const errorText = isTimeout
         ? 'The request took too long. Please check your internet connection and try again.'
         : isNetworkError
@@ -513,6 +514,7 @@ export const ConversationProvider: React.FC<{ children: ReactNode }> = ({ childr
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useConversation = () => {
   const context = React.useContext(ConversationContext);
   if (!context) {

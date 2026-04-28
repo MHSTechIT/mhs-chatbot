@@ -16,7 +16,7 @@ function getStoredTheme(): ThemeMode {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === 'dark' || stored === 'light') return stored;
-  } catch (_) {}
+  } catch { /* ignore */ }
   return 'dark';
 }
 
@@ -38,6 +38,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {

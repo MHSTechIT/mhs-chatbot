@@ -101,7 +101,7 @@ async def ask_question(request: AskRequest, db: Session = Depends(get_db)):
         import traceback
         logger.error(f"Error processing question: {e}")
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")
 
 
 class TTSRequest(BaseModel):
@@ -208,7 +208,7 @@ async def generate_tts_audio(request: TTSRequest):
         raise e
     except Exception as e:
         logger.error(f"TTS generation error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred. Please try again later.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

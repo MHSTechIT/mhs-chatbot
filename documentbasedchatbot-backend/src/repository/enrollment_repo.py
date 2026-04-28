@@ -39,6 +39,14 @@ class EnrollmentRepository:
         return db.query(Enrollment).order_by(Enrollment.created_at.desc()).limit(limit).all()
 
     @staticmethod
+    def get_enrollments_paginated(db: Session, limit: int = 20, offset: int = 0):
+        """Retrieve enrollments with pagination. Returns (rows, total_count)."""
+        query = db.query(Enrollment).order_by(Enrollment.created_at.desc())
+        total = query.count()
+        rows = query.offset(offset).limit(limit).all()
+        return rows, total
+
+    @staticmethod
     def get_enrollments_by_phone(db: Session, phone: str) -> list:
         """Retrieve enrollments by phone number."""
         return db.query(Enrollment).filter(Enrollment.phone == phone.strip()).all()
