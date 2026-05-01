@@ -117,6 +117,37 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onAvatarClick }) =
                             Speaking
                         </button>
                     )}
+
+                    {/* Language toggle — always visible so users can switch EN / TA */}
+                    <div className={`flex rounded-lg overflow-hidden border text-xs font-semibold ${
+                        isDark ? 'border-theme-cardBorder' : 'border-gray-200'
+                    }`}>
+                        <button
+                            type="button"
+                            onClick={() => { setLanguage('en'); stopAudio(); }}
+                            className={`px-2.5 py-1 transition-colors ${
+                                language === 'en'
+                                    ? 'bg-theme-accent text-white'
+                                    : isDark
+                                        ? 'bg-theme-card text-theme-muted hover:text-white'
+                                        : 'bg-white text-gray-500 hover:text-gray-800'
+                            }`}
+                            title="Switch to English"
+                        >EN</button>
+                        <button
+                            type="button"
+                            onClick={() => { setLanguage('ta'); stopAudio(); }}
+                            className={`px-2.5 py-1 transition-colors ${
+                                language === 'ta'
+                                    ? 'bg-theme-accent text-white'
+                                    : isDark
+                                        ? 'bg-theme-card text-theme-muted hover:text-white'
+                                        : 'bg-white text-gray-500 hover:text-gray-800'
+                            }`}
+                            title="Switch to Tamil"
+                        >TA</button>
+                    </div>
+
                     <button
                         type="button"
                         onClick={toggleTheme}
